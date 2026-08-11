@@ -306,17 +306,23 @@
 
         window.addEventListener('popstate', () => { lockScreen(); });
 
-        // Emoji Picker Logic
+        // Emoji Picker Logic (Fixed to prevent closing on emoji click)
         const emojiBtn = document.getElementById('emoji-btn');
         const emojiPicker = document.getElementById('emoji-picker');
+        
         emojiBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid';
             document.getElementById('translateDropdown').style.display = 'none';
         });
 
+        emojiPicker.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
         document.querySelectorAll('#emoji-picker span').forEach(el => {
-            el.addEventListener('click', () => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
                 document.getElementById('messageInput').value += el.innerText;
                 document.getElementById('messageInput').focus();
             });
@@ -330,6 +336,10 @@
             e.stopPropagation();
             translateDropdown.style.display = translateDropdown.style.display === 'block' ? 'none' : 'block';
             emojiPicker.style.display = 'none';
+        });
+
+        translateDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
 
         let originalTypedText = "";
@@ -464,7 +474,7 @@
             }
         });
 
-        // File / Image Attachment Feature
+        // File / Image Attachment Feature (Fixed for smooth image selection & sending)
         const attachBtn = document.getElementById('attach-btn');
         const fileInput = document.getElementById('fileInput');
 
@@ -475,8 +485,6 @@
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             if (file) {
                 const reader = new FileReader();
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                
                 reader.onload = function(uploadEvent) {
                     let contentHTML = "";
                     if (file.type.startsWith('image/')) {
@@ -484,8 +492,10 @@
                     } else {
                         contentHTML = `<i class="fa-solid fa-file-lines"></i> ${file.name} (Attached)`;
                     }
+                    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                     socket.emit('send_message', { id: msgId, sender: senderName, text: contentHTML, time: timeStr });
+                    fileInput.value = ''; // Reset input so same file can be selected again
                 };
                 reader.readAsDataURL(file);
             }
