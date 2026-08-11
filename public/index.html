@@ -296,11 +296,11 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const SECRET_PIN = "1432";
+        const SECRET_PIN = "1432"; // Apna secret PIN yahan change kar sakte hain
         let calcInput = "";
 
         function calcPress(val) {
-            if(calcInput === "0" || calcInput === "Error") calcInput = "";
+            if(calcInput === "0") calcInput = "";
             calcInput += val;
             document.getElementById('calc-display').innerText = calcInput;
         }
@@ -336,38 +336,6 @@
             document.getElementById('calculator-screen').classList.remove('hidden');
             calcClear();
         }
-
-        // --- PANIC FEATURE: SHAKE TO LOCK ONLY (DOUBLE TAP REMOVED TO PREVENT GLITCH) ---
-        let lastX = 0, lastY = 0, lastZ = 0;
-        let lastUpdate = 0;
-        
-        window.addEventListener('devicemotion', function(e) {
-            let chatApp = document.getElementById('chat-app');
-            if (!chatApp.classList.contains('hidden')) {
-                let current = e.accelerationIncludingGravity;
-                if (current) {
-                    let currentTime = new Date().getTime();
-                    if ((currentTime - lastUpdate) > 100) {
-                        let diffTime = currentTime - lastUpdate;
-                        lastUpdate = currentTime;
-                        
-                        let x = current.x;
-                        let y = current.y;
-                        let z = current.z;
-                        
-                        let speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
-                        
-                        // Tezi se shake karne par hi lock hoga
-                        if (speed > 45) { 
-                            lockApp();
-                        }
-                        lastX = x;
-                        lastY = y;
-                        lastZ = z;
-                    }
-                }
-            }
-        });
 
         // --- CHAT LOGIC ---
         const socket = io();
