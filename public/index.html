@@ -351,35 +351,47 @@
                 if (originalTypedText === "" || messageInput.value !== originalTypedText) {
                     originalTypedText = currentVal;
                 }
-                let text = originalTypedText.toLowerCase();
+                let text = originalTypedText;
 
                 if (lang === 'english') {
-                    let converted = text
-                        .replace(/kya kar rhi ho|kya kr rhi ho|kya kar rahe ho|kya kr rhe ho|kya kar rahi ho/gi, "What are you doing")
-                        .replace(/kya haal hai|kaise ho|kya hal hai/gi, "How are you")
-                        .replace(/khaana ho gaya|khana khaye|khana ho gya/gi, "Have you eaten your meal")
-                        .replace(/theek hai|thik hai|thik h|theek h/gi, "Alright")
-                        .replace(/kahan ho|kaha ho|kidhar ho/gi, "Where are you")
-                        .replace(/baad me baat karte hain|kal baat karenge|baad me baat krte h/gi, "We will talk later")
-                        .replace(/suno na|suno ek baat batao/gi, "Listen to me")
-                        .replace(/kya hua|kya ho gaya|kya hua h/gi, "What happened")
-                        .replace(/nahi|nhi|na/gi, "No")
-                        .replace(/haan|ha|haa/gi, "Yes")
-                        .replace(/acha|achha|accha/gi, "Okay")
-                        .replace(/main thik hoon|mai thik hu|main theek hun/gi, "I am fine")
-                        .replace(/mujhe neend aa rahi hai|neend aa rhi h/gi, "I am feeling sleepy")
-                        .replace(/gn|good night/gi, "Good night")
-                        .replace(/gm|good morning/gi, "Good morning");
+                    let converted = text;
+                    
+                    const translations = [
+                        { regex: /kya\s+car\s+rhi\s+ho|kya\s+kar\s+rhi\s+ho|kya\s+kr\s+rhi\s+ho|kya\s+kar\s+rahe\s+ho|kya\s+kr\s+rhe\s+ho|kya\s+kar\s+rahi\s+ho/gi, replacement: "What are you doing" },
+                        { regex: /kya\s+haal\s+hai|kaise\s+ho|kya\s+hal\s+hai/gi, replacement: "How are you" },
+                        { regex: /khaana\s+ho\s+gaya|khana\s+khaye|khana\s+ho\s+gya/gi, replacement: "Have you eaten your meal" },
+                        { regex: /theek\s+hai|thik\s+hai|thik\s+h|theek\s+h/gi, replacement: "Alright" },
+                        { regex: /kahan\s+ho|kaha\s+ho|kidhar\s+ho/gi, replacement: "Where are you" },
+                        { regex: /baad\s+me\s+baat\s+karte\s+hain|kal\s+baat\s+karenge|baad\s+me\s+baat\s+krte\s+h/gi, replacement: "We will talk later" },
+                        { regex: /suno\s+na|suno\s+ek\s+baat\s+batao/gi, replacement: "Listen to me" },
+                        { regex: /kya\s+hua|kya\s+ho\s+gaya|kya\s+hua\s+h/gi, replacement: "What happened" },
+                        { regex: /\bnhi\b|\bnahi\b|\bna\b/gi, replacement: "No" },
+                        { regex: /\bhaan\b|\bha\b|\bhaa\b/gi, replacement: "Yes" },
+                        { regex: /acha|achha|accha/gi, replacement: "Okay" },
+                        { regex: /main\s+thik\s+hoon|mai\s+thik\s+hu|main\s+theek\s+hun/gi, replacement: "I am fine" },
+                        { regex: /mujhe\s+neend\s+aa\s+rahi\s+hai|neend\s+aa\s+rhi\s+h/gi, replacement: "I am feeling sleepy" },
+                        { regex: /\bgn\b|good\s+night/gi, replacement: "Good night" },
+                        { regex: /\bgm\b|good\s+morning/gi, replacement: "Good morning" }
+                    ];
 
-                    if (converted === text) {
-                        converted = text
-                            .replace(/\bhai\b/g, "is")
-                            .replace(/\bho\b/g, "are")
-                            .replace(/\bhoon\b|\bhu\b/g, "am")
-                            .replace(/\bkya\b/g, "What")
-                            .replace(/\bkaise\b/g, "How")
-                            .replace(/\bkahan\b/g, "Where")
-                            .replace(/\bkyun\b/g, "Why");
+                    let matched = false;
+                    for (let item of translations) {
+                        if (item.regex.test(converted)) {
+                            converted = converted.replace(item.regex, item.replacement);
+                            matched = true;
+                        }
+                    }
+
+                    if (!matched) {
+                        converted = converted
+                            .replace(/\bhai\b/gi, "is")
+                            .replace(/\bho\b/gi, "are")
+                            .replace(/\bhoon\b|\bhu\b/gi, "am")
+                            .replace(/\bkya\b/gi, "What")
+                            .replace(/\bkaise\b/gi, "How")
+                            .replace(/\bkahan\b/gi, "Where")
+                            .replace(/\bkyun\b/gi, "Why")
+                            .replace(/\bkya\s+matlab\b/gi, "What do you mean");
                     }
 
                     converted = converted.charAt(0).toUpperCase() + converted.slice(1);
@@ -390,13 +402,13 @@
 
                 } else if (lang === 'hinglish') {
                     let converted = text
-                        .replace(/what are you doing/gi, "kya kar rahe ho")
-                        .replace(/how are you/gi, "kya haal hai")
-                        .replace(/where are you/gi, "kaha ho")
-                        .replace(/i am fine/gi, "main theek hoon")
-                        .replace(/good night/gi, "good night")
-                        .replace(/what happened/gi, "kya hua")
-                        .replace(/listen to me/gi, "suno na")
+                        .replace(/what\s+are\s+you\s+doing/gi, "kya kar rahe ho")
+                        .replace(/how\s+are\s+you/gi, "kya haal hai")
+                        .replace(/where\s+are\s+you/gi, "kaha ho")
+                        .replace(/i\s+am\s+fine/gi, "main theek hoon")
+                        .replace(/good\s+night/gi, "good night")
+                        .replace(/what\s+happened/gi, "kya hua")
+                        .replace(/listen\s+to\s+me/gi, "suno na")
                         .replace(/okay|alright/gi, "theek hai");
 
                     messageInput.value = converted;
