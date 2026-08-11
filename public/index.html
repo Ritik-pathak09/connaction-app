@@ -74,6 +74,7 @@
         .message {
             max-width: 80%; padding: 8px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column;
         }
         .message.sent { background: var(--msg-out); align-self: flex-end; border-top-right-radius: 0; }
         .message.received { background: var(--msg-in); align-self: flex-start; border-top-left-radius: 0; }
@@ -81,7 +82,12 @@
         .msg-sender-name { font-size: 11px; font-weight: bold; color: #53bdeb; margin-bottom: 3px; display: block; }
         .message.sent .msg-sender-name { color: #a5f3fc; }
 
-        .message .time { font-size: 10px; color: #8696a0; margin-top: 4px; text-align: right; display: block; float: right; margin-left: 8px; }
+        .msg-footer { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 4px; }
+        .message .time { font-size: 10px; color: #8696a0; }
+        .delete-msg-btn { font-size: 11px; color: #8696a0; cursor: pointer; display: none; background: none; border: none; padding: 0; }
+        .message:hover .delete-msg-btn { display: inline-block; }
+        .delete-msg-btn:hover { color: #ef4444; }
+
         .message audio { width: 100%; max-width: 200px; height: 35px; margin-top: 5px; }
         .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; }
 
@@ -345,21 +351,39 @@
                 if (originalTypedText === "" || messageInput.value !== originalTypedText) {
                     originalTypedText = currentVal;
                 }
-                let text = originalTypedText;
+                let text = originalTypedText.toLowerCase();
 
                 if (lang === 'english') {
+                    // Smart Conversational Hinglish to Correct English AI mapping
                     let converted = text
-                        .replace(/kya kar rhi ho|kya kr rhi ho|kya kar rahe ho|kya kr rhe ho|kya kar rahi ho/gi, "What are you doing")
-                        .replace(/kya haal hai|kaise ho/gi, "How are you")
-                        .replace(/khaana ho gaya|khana khaye/gi, "Have you eaten your meal")
-                        .replace(/theek hai|thik hai/gi, "Alright")
-                        .replace(/kahan ho|kaha ho/gi, "Where are you")
-                        .replace(/baad me baat karte hain|kal baat karenge/gi, "We will talk later")
+                        .replace(/kya kar rhi ho|kya kr rhi ho|kya kar rahe ho|kya kr rhe ho|kya kar rahi ho|kya kr rhi ho/gi, "What are you doing")
+                        .replace(/kya haal hai|kaise ho|kya hal hai/gi, "How are you")
+                        .replace(/khaana ho gaya|khana khaye|khana ho gya/gi, "Have you eaten your meal")
+                        .replace(/theek hai|thik hai|thik h|theek h/gi, "Alright")
+                        .replace(/kahan ho|kaha ho|kidhar ho/gi, "Where are you")
+                        .replace(/baad me baat karte hain|kal baat karenge|baad me baat krte h/gi, "We will talk later")
                         .replace(/suno na|suno ek baat batao/gi, "Listen to me")
-                        .replace(/kya hua|kya ho gaya/gi, "What happened")
-                        .replace(/nahi|nhi/gi, "No")
-                        .replace(/haan|ha/gi, "Yes")
-                        .replace(/acha|achha/gi, "Okay");
+                        .replace(/kya hua|kya ho gaya|kya hua h/gi, "What happened")
+                        .replace(/nahi|nhi|na/gi, "No")
+                        .replace(/haan|ha|haa/gi, "Yes")
+                        .replace(/acha|achha|accha/gi, "Okay")
+                        .replace(/main thik hoon|mai thik hu|main theek hun/gi, "I am fine")
+                        .replace(/kya kar rahe ho/gi, "What are you doing")
+                        .replace(/mujhe neend aa rahi hai|neend aa rhi h/gi, "I am feeling sleepy")
+                        .replace(/gn|good night/gi, "Good night")
+                        .replace(/gm|good morning/gi, "Good morning");
+
+                    // Fallback smart sentence structure if custom match isn't an exact match
+                    if (converted === text) {
+                        converted = text
+                            .replace(/\bhai\b/g, "is")
+                            .replace(/\bho\b/g, "are")
+                            .replace(/\bhoon\b|\bhu\b/g, "am")
+                            .replace(/\bkya\b/g, "What")
+                            .replace(/\bkaise\b/g, "How")
+                            .replace(/\bkahan\b/g, "Where")
+                            .replace(/\bkyun\b/g, "Why");
+                    }
 
                     converted = converted.charAt(0).toUpperCase() + converted.slice(1);
                     if (!converted.endsWith(".") && !converted.endsWith("?") && !converted.endsWith("!")) {
@@ -412,8 +436,9 @@
                         reader.onloadend = () => {
                             const base64Audio = reader.result;
                             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const msgId = 'msg_' + Date.now() + Math.random().toString(36.substring(2, 7));
                             const audioHTML = `<audio controls src="${base64Audio}"></audio>`;
-                            socket.emit('send_message', { sender: senderName, text: audioHTML, time: timeStr });
+                            socket.emit('send_message', { id: msgId, sender: senderName, text: audioHTML, time: timeStr });
                         };
                     };
 
@@ -450,7 +475,8 @@
                     } else {
                         contentHTML = `<i class="fa-solid fa-file-lines"></i> ${file.name} (Attached)`;
                     }
-                    socket.emit('send_message', { sender: senderName, text: contentHTML, time: timeStr });
+                    const msgId = 'msg_' + Date.now() + Math.random().toString(36.substring(2, 7));
+                    socket.emit('send_message', { id: msgId, sender: senderName, text: contentHTML, time: timeStr });
                 };
                 reader.readAsDataURL(file);
             }
@@ -463,22 +489,27 @@
         socket.on('load_history', (history) => {
             messageBox.innerHTML = '';
             if(history.length === 0) {
-                messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Secure session initialized.<span class="time">Just now</span></div>`;
+                messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Secure session initialized.<div class="msg-footer"><span class="time">Just now</span></div></div>`;
                 return;
             }
             history.forEach(msg => {
-                appendMessageUI(msg.sender, msg.text, msg.time);
+                appendMessageUI(msg.id, msg.sender, msg.text, msg.time);
             });
             scrollToBottom();
         });
 
         socket.on('receive_message', (msg) => {
-            appendMessageUI(msg.sender, msg.text, msg.time);
+            appendMessageUI(msg.id, msg.sender, msg.text, msg.time);
             scrollToBottom();
         });
 
+        socket.on('delete_message', (msgId) => {
+            const element = document.getElementById(msgId);
+            if (element) element.remove();
+        });
+
         socket.on('history_cleared', () => {
-            messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<span class="time">Just now</span></div>`;
+            messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`;
         });
 
         function sendMessage() {
@@ -486,7 +517,8 @@
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             if (text !== '') {
                 const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                socket.emit('send_message', { sender: senderName, text: text, time: timeStr });
+                const msgId = 'msg_' + Date.now() + Math.random().toString(36.substring(2, 7));
+                socket.emit('send_message', { id: msgId, sender: senderName, text: text, time: timeStr });
                 messageInput.value = '';
                 originalTypedText = ""; 
                 emojiPicker.style.display = 'none';
@@ -499,14 +531,28 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        function appendMessageUI(sender, text, time) {
+        function appendMessageUI(id, sender, text, time) {
             const msgDiv = document.createElement('div');
+            if (id) msgDiv.id = id;
             const currentTypingName = document.getElementById('activeSenderName').value.trim();
             const isMe = (sender.toLowerCase() === currentTypingName.toLowerCase());
             
             msgDiv.classList.add('message', isMe ? 'sent' : 'received');
-            msgDiv.innerHTML = `<span class="msg-sender-name">${sender}</span>${text} <span class="time">${time}</span>`;
+            msgDiv.innerHTML = `
+                <span class="msg-sender-name">${sender}</span>
+                <div class="msg-text-content">${text}</div>
+                <div class="msg-footer">
+                    <button class="delete-msg-btn" onclick="deleteMessage('${id}')" title="Delete message"><i class="fa-solid fa-trash"></i></button>
+                    <span class="time">${time}</span>
+                </div>
+            `;
             messageBox.appendChild(msgDiv);
+        }
+
+        function deleteMessage(msgId) {
+            if (msgId) {
+                socket.emit('delete_message', msgId);
+            }
         }
 
         function scrollToBottom() {
