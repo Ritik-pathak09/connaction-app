@@ -337,26 +337,7 @@
             calcClear();
         }
 
-        // --- PANIC FEATURES (NO TIMER, MANUAL SHAKE & DOUBLE TAP ONLY) ---
-        
-        // 1. Double Tap Anywhere on Header to Lock (Taaki chat scroll karte waqt galti se lock na ho, header par double tap karne se ho)
-        let lastTap = 0;
-        const chatHeader = document.querySelector('header');
-        
-        chatHeader.addEventListener('touchend', function(e) {
-            let chatApp = document.getElementById('chat-app');
-            if (!chatApp.classList.contains('hidden')) {
-                let currentTime = new Date().getTime();
-                let tapLength = currentTime - lastTap;
-                if (tapLength < 300 && tapLength > 0) {
-                    lockApp();
-                    e.preventDefault();
-                }
-                lastTap = currentTime;
-            }
-        });
-
-        // 2. Shake Phone to Lock (Tezi se hilane par hi band hoga)
+        // --- PANIC FEATURE: SHAKE TO LOCK ONLY (DOUBLE TAP REMOVED TO PREVENT GLITCH) ---
         let lastX = 0, lastY = 0, lastZ = 0;
         let lastUpdate = 0;
         
@@ -376,7 +357,7 @@
                         
                         let speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
                         
-                        // High threshold taaki normal use mein band na ho
+                        // Tezi se shake karne par hi lock hoga
                         if (speed > 45) { 
                             lockApp();
                         }
