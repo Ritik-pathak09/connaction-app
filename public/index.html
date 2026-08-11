@@ -13,7 +13,8 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #121212;
-            height: 100vh;
+            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,6 +23,7 @@
             width: 100%;
             max-width: 400px;
             height: 100vh;
+            height: 100dvh;
             background: #efeae2;
             display: flex;
             flex-direction: column;
@@ -296,7 +298,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const SECRET_PIN = "1432"; // Apna secret PIN yahan change kar sakte hain
+        const SECRET_PIN = "1432"; 
         let calcInput = "";
 
         function calcPress(val) {
@@ -329,13 +331,30 @@
         function openChatApp() {
             document.getElementById('calculator-screen').classList.add('hidden');
             document.getElementById('chat-app').classList.remove('hidden');
+            // Mobile back button support ke liye history state add ki
+            history.pushState({ screen: 'chat' }, '', '');
         }
 
         function lockApp() {
             document.getElementById('chat-app').classList.add('hidden');
             document.getElementById('calculator-screen').classList.remove('hidden');
             calcClear();
+            // History manage karne ke liye agar chat se lock kiye toh back state adjust ho jaye
+            if (history.state && history.state.screen === 'chat') {
+                history.back();
+            }
         }
+
+        // Mobile ka back button press hone par handle karna
+        window.addEventListener('popstate', function(event) {
+            const chatApp = document.getElementById('chat-app');
+            if (!chatApp.classList.contains('hidden')) {
+                // Agar chat khuli hai aur user ne back dabaya, toh app lock ho jaye
+                document.getElementById('chat-app').classList.add('hidden');
+                document.getElementById('calculator-screen').classList.remove('hidden');
+                calcClear();
+            }
+        });
 
         // --- CHAT LOGIC ---
         const socket = io();
