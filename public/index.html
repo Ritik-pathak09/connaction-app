@@ -45,7 +45,7 @@
             border-radius: 8px; resize: none; font-size: 14px; outline: none; background: #fff; color: #334155; line-height: 1.5;
         }
 
-        /* --- PROFESSIONAL WORKSPACE CHAT UI (WHITE THEME) --- */
+        /* --- PROFESSIONAL WORKSPACE CHAT UI --- */
         #chat-container {
             display: none; width: 100%; height: 100%; background: var(--chat-bg);
             flex-direction: column; position: absolute; top: 0; left: 0; z-index: 3;
@@ -91,7 +91,16 @@
         .message audio { width: 100%; max-width: 200px; height: 35px; margin-top: 5px; }
         .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; }
 
-        /* Input Panel */
+        /* WhatsApp Style Image Preview Bar */
+        #image-preview-bar {
+            display: none; padding: 8px 14px; background: #f0f2f5; border-top: 1px solid #d1d7db;
+            align-items: center; gap: 10px; position: relative; z-index: 6;
+        }
+        #image-preview-bar img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d7db; }
+        #image-preview-bar span { font-size: 13px; color: #111b21; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+
+        /* Input Panel with Inline Name & Translate Dropdown Bar */
         .chat-input-container { background: #f0f2f5; display: flex; flex-direction: column; width: 100%; z-index: 5; position: relative; border-top: 1px solid #d1d7db; }
         
         .sender-bar {
@@ -200,6 +209,13 @@
             
             <div class="chat-messages" id="messageBox"></div>
 
+            <!-- WhatsApp Style Image Preview Bar -->
+            <div id="image-preview-bar">
+                <img id="previewImg" src="" alt="Preview">
+                <span id="previewFileName">Image Selected</span>
+                <button id="cancel-img-btn" title="Cancel Image"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
             <!-- Emoji Picker -->
             <div id="emoji-picker">
                 <span>😊</span><span>😂</span><span>❤️</span><span>😍</span><span>👍</span><span>🔥</span>
@@ -306,7 +322,7 @@
 
         window.addEventListener('popstate', () => { lockScreen(); });
 
-        // Emoji Picker Logic (Fixed to prevent screen bouncing/focus jumping)
+        // Emoji Picker Logic (Keeps picker open and prevents keyboard/screen bouncing)
         const emojiBtn = document.getElementById('emoji-btn');
         const emojiPicker = document.getElementById('emoji-picker');
         
@@ -324,7 +340,7 @@
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.getElementById('messageInput').value += el.innerText;
-                // messageInput.focus() is intentionally removed to stop keyboard bouncing
+                // messageInput.focus() intentionally omitted to avoid closing keyboard/picker
             });
         });
 
@@ -474,33 +490,45 @@
             }
         });
 
-        // File / Image Attachment Feature (Fixed for seamless cross-platform selection & sending)
+        // WhatsApp Style Image Preview & Send Logic
         const attachBtn = document.getElementById('attach-btn');
         const fileInput = document.getElementById('fileInput');
+        const imagePreviewBar = document.getElementById('image-preview-bar');
+        const previewImg = document.getElementById('previewImg');
+        const previewFileName = document.getElementById('previewFileName');
+        const cancelImgBtn = document.getElementById('cancel-img-btn');
+
+        let pendingImageData = null;
 
         attachBtn.addEventListener('click', () => { fileInput.click(); });
 
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(uploadEvent) {
-                    setTimeout(() => {
-                        let contentHTML = "";
-                        if (file.type.startsWith('image/')) {
-                            contentHTML = `<img src="${uploadEvent.target.result}" alt="Attachment">`;
-                        } else {
-                            contentHTML = `<i class="fa-solid fa-file-lines"></i> ${file.name} (Attached)`;
-                        }
-                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                        socket.emit('send_message', { id: msgId, sender: senderName, text: contentHTML, time: timeStr });
-                        fileInput.value = '';
-                    }, 50);
+                    pendingImageData = {
+                        type: file.type,
+                        name: file.name,
+                        data: uploadEvent.target.result
+                    };
+                    if (file.type.startsWith('image/')) {
+                        previewImg.src = uploadEvent.target.result;
+                        previewImg.style.display = 'block';
+                    } else {
+                        previewImg.style.display = 'none';
+                    }
+                    previewFileName.innerText = file.name;
+                    imagePreviewBar.style.display = 'flex';
                 };
                 reader.readAsDataURL(file);
             }
+        });
+
+        cancelImgBtn.addEventListener('click', () => {
+            pendingImageData = null;
+            imagePreviewBar.style.display = 'none';
+            fileInput.value = '';
         });
 
         // Socket.io Live Chat Synchronization
@@ -534,17 +562,37 @@
         });
 
         function sendMessage() {
-            const text = messageInput.value.trim();
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Send pending preview image first if exists
+            if (pendingImageData) {
+                let contentHTML = "";
+                if (pendingImageData.type.startsWith('image/')) {
+                    contentHTML = `<img src="${pendingImageData.data}" alt="Attachment">`;
+                } else {
+                    contentHTML = `<i class="fa-solid fa-file-lines"></i> ${pendingImageData.name} (Attached)`;
+                }
+                const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
+                socket.emit('send_message', { id: imgMsgId, sender: senderName, text: contentHTML, time: timeStr });
+                
+                // Reset preview bar
+                pendingImageData = null;
+                imagePreviewBar.style.display = 'none';
+                fileInput.value = '';
+            }
+
+            // Send text if present
+            const text = messageInput.value.trim();
             if (text !== '') {
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                socket.emit('send_message', { id: msgId, sender: senderName, text: text, time: timeStr });
+                const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
+                socket.emit('send_message', { id: textMsgId, sender: senderName, text: text, time: timeStr });
                 messageInput.value = '';
                 originalTypedText = ""; 
-                emojiPicker.style.display = 'none';
-                translateDropdown.style.display = 'none';
             }
+
+            emojiPicker.style.display = 'none';
+            translateDropdown.style.display = 'none';
         }
 
         sendBtn.addEventListener('click', sendMessage);
