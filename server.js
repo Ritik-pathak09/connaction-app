@@ -21,6 +21,12 @@ io.on('connection', (socket) => {
         io.emit('receive_message', data);
     });
 
+    // Delete message event sync
+    socket.on('delete_message', (msgId) => {
+        chatHistory = chatHistory.filter(msg => msg.id !== msgId);
+        io.emit('delete_message', msgId);
+    });
+
     // Clear history
     socket.on('clear_history', () => {
         chatHistory = [];
