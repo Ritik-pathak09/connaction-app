@@ -3,401 +3,521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Calculator & Notes</title>
+    <title>Workspace & Notes Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        :root {
+            --bg-color: #0f172a;
+            --sidebar-bg: #ffffff;
+            --chat-bg: #0b141a;
+            --msg-out: #005c4b;
+            --msg-in: #202c33;
+            --text-main: #e9edef;
+            --header-pro: #1f2c34;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212;
-            min-height: 100vh;
-            min-height: 100dvh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #cbd5e1; height: 100vh; height: 100dvh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        .app-frame {
+            width: 100%; max-width: 480px; height: 100%; height: 100dvh; background: #fff;
+            position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;
         }
-        .app-container {
-            width: 100%;
-            max-width: 400px;
-            height: 100vh;
-            height: 100dvh;
-            background: #efeae2;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        @media (min-width: 481px) {
-            .app-container {
-                height: 85vh;
-                max-height: 700px;
-                border-radius: 16px;
-            }
+        @media(min-width: 481px) {
+            .app-frame { height: 90vh; border-radius: 12px; max-height: 850px; }
         }
 
-        /* --- FAKE CALCULATOR SCREEN (FIXED SIZE) --- */
-        #calculator-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #171717;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 16px;
+        /* --- DISGUISE: NOTES APP --- */
+        #notes-container {
+            width: 100%; height: 100%; background: var(--sidebar-bg);
+            display: flex; flex-direction: column; position: absolute; top: 0; left: 0; z-index: 2;
         }
-        .calc-display {
-            color: #ffffff;
-            font-size: 36px;
-            text-align: right;
-            padding: 15px 10px;
-            word-break: break-all;
-            background: #262626;
-            border-radius: 10px;
-            margin-bottom: 15px;
+        .notes-header {
+            background: #ffffff; border-bottom: 1px solid #e2e8f0;
+            color: #0f172a; padding: 16px 20px; display: flex;
+            justify-content: space-between; align-items: center;
         }
-        .calc-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding-bottom: 10px;
-        }
-        .calc-btn {
-            background: #333333;
-            color: white;
-            border: none;
-            font-size: 18px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background 0.2s;
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 70px;
-            margin: 0 auto;
-        }
-        .calc-btn:active { background: #525252; }
-        .calc-btn.operator { background: #ff9f0a; }
-        .calc-btn.equal { background: #34c759; }
-
-        /* --- CHAT APP UI --- */
-        #chat-app {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: #efeae2;
-            z-index: 10;
-        }
-        .hidden { display: none !important; }
-
-        header {
-            background-color: #075e54;
-            color: white;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background: #25d366;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        .header-info h2 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-        .header-info p {
-            font-size: 12px;
-            color: #e2e8f0;
-        }
-        .lock-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
+        .notes-header h3 { font-size: 16px; font-weight: 600; color: #1e293b; }
+        .notes-header h3 i { color: #0284c7; margin-right: 8px; }
+        .notes-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .notes-body textarea {
+            width: 100%; height: 100%; padding: 15px; border: 1px solid #cbd5e1;
+            border-radius: 8px; resize: none; font-size: 14px; outline: none; background: #fff; color: #334155; line-height: 1.5;
         }
 
-        /* Chat Area */
-        #chat-box {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 20px 20px;
+        /* --- PROFESSIONAL WORKSPACE CHAT UI --- */
+        #chat-container {
+            display: none; width: 100%; height: 100%; background: var(--chat-bg);
+            flex-direction: column; position: absolute; top: 0; left: 0; z-index: 3;
+        }
+        .chat-header {
+            background: var(--header-pro); color: #fff; padding: 10px 14px;
+            display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+        .chat-header-left { display: flex; align-items: center; gap: 10px; }
+        .chat-header i { font-size: 18px; cursor: pointer; color: #aebac1; padding: 5px; }
+        .chat-header i:hover { color: #fff; }
+        
+        .avatar-circle {
+            width: 40px; height: 40px; background: #0284c7; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 15px; color: white;
+        }
+        .user-info h4 { font-size: 15px; font-weight: 600; color: var(--text-main); }
+        .user-info span { font-size: 11px; color: #00a884; }
+        
+        .chat-messages {
+            flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+            background-color: #0b141a;
+            background-image: radial-gradient(#222d34 0.75px, transparent 0.75px); background-size: 20px 20px;
         }
         .message {
-            max-width: 75%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.4;
-            position: relative;
-            word-wrap: break-word;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            max-width: 80%; padding: 8px 12px; border-radius: 7.5px; font-size: 14px;
+            position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
         }
-        .message.sent {
-            background-color: #dcf8c6;
-            color: #111;
-            align-self: flex-end;
-            border-top-right-radius: 0;
-        }
-        .message.received {
-            background-color: #ffffff;
-            color: #111;
-            align-self: flex-start;
-            border-top-left-radius: 0;
-        }
-        .sender {
-            font-size: 11px;
-            font-weight: bold;
-            color: #075e54;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .time {
-            font-size: 9px;
-            color: #666;
-            float: right;
-            margin-left: 8px;
-            margin-top: 4px;
-        }
+        .message.sent { background: var(--msg-out); align-self: flex-end; border-top-right-radius: 0; }
+        .message.received { background: var(--msg-in); align-self: flex-start; border-top-left-radius: 0; }
+        
+        .msg-sender-name { font-size: 11px; font-weight: bold; color: #53bdeb; margin-bottom: 3px; display: block; }
+        .message.sent .msg-sender-name { color: #a5f3fc; }
 
-        /* Input Bar */
-        #form {
-            background: #f0f0f0;
-            padding: 10px 12px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        .message .time { font-size: 10px; color: #8696a0; margin-top: 4px; text-align: right; display: block; float: right; margin-left: 8px; }
+        .message audio { width: 100%; max-width: 200px; height: 35px; margin-top: 5px; }
+        .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; }
+
+        /* Input Panel with Inline Name & Translate Dropdown Bar */
+        .chat-input-container { background: var(--header-pro); display: flex; flex-direction: column; width: 100%; z-index: 5; position: relative; }
+        
+        .sender-bar {
+            display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: #111b21; border-bottom: 1px solid #222d34;
         }
-        #nameInput {
-            width: 80px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            outline: none;
-            font-size: 13px;
-            background: white;
-            text-align: center;
+        .sender-left { display: flex; align-items: center; gap: 8px; }
+        .sender-left label { font-size: 12px; color: #8696a0; }
+        .sender-left input {
+            background: #2a3942; border: none; padding: 4px 10px; border-radius: 4px; color: #e9edef; font-size: 12px; width: 100px; outline: none;
         }
-        #input {
-            flex: 1;
-            padding: 10px 16px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            outline: none;
-            font-size: 14px;
-            background: white;
+        
+        .translate-wrapper { position: relative; display: inline-block; }
+        .translate-btn {
+            background: #00a884; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 4px;
         }
-        #form button {
-            background-color: #075e54;
-            color: white;
-            border: none;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
+        .translate-btn:hover { background: #019575; }
+
+        #translateDropdown {
+            display: none; position: absolute; right: 0; bottom: 30px; background: #202c33;
+            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 20; width: 140px; overflow: hidden; border: 1px solid #2a3942;
         }
+        #translateDropdown div {
+            padding: 8px 12px; font-size: 12px; color: #e9edef; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+        }
+        #translateDropdown div:hover { background: #2a3942; }
+
+        .chat-input-area {
+            padding: 8px 14px; display: flex; align-items: center; gap: 10px; position: relative; width: 100%;
+        }
+        .chat-input-area .actions-icon { display: flex; gap: 12px; color: #8696a0; font-size: 18px; cursor: pointer; align-items: center; }
+        .chat-input-area input.msg-box {
+            flex: 1; background: #2a3942; border: none; padding: 10px 14px; border-radius: 8px;
+            outline: none; font-size: 14px; color: var(--text-main); min-width: 0;
+        }
+        .chat-input-area input.msg-box::placeholder { color: #8696a0; }
+        .chat-input-area button {
+            background: #00a884; border: none; color: white; width: 40px; height: 40px; min-width: 40px;
+            border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 15px;
+        }
+        #mic-btn.recording { color: #ef4444; animation: pulse 1s infinite; }
+        #mic-btn { cursor: pointer; color: #8696a0; font-size: 18px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Emoji Box Popup */
+        #emoji-picker {
+            display: none; position: absolute; bottom: 110px; left: 10px; background: #202c33;
+            padding: 12px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 10; max-height: 200px; overflow-y: auto; width: 280px;
+        }
+        #emoji-picker span { font-size: 22px; cursor: pointer; text-align: center; padding: 4px; border-radius: 4px; }
+        #emoji-picker span:hover { background: #2a3942; }
+
+        /* --- PASSCODE MODAL --- */
+        #passcode-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-content {
+            background: #ffffff; padding: 30px; border-radius: 12px;
+            width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-content h3 { font-size: 17px; margin-bottom: 5px; color: #0f172a; }
+        .modal-content p { font-size: 12px; color: #64748b; margin-bottom: 20px; }
+        .modal-content input {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
+            text-align: center; font-size: 20px; letter-spacing: 10px; color: #0f172a; outline: none;
+        }
+        .modal-content button {
+            background: #0f172a; color: white; border: none;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; font-size: 14px;
+        }
+        .clear-history { font-size: 11px; color: #ef4444; cursor: pointer; margin-top: 12px; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        
-        <!-- FAKE CALCULATOR (SECRET COVER) -->
-        <div id="calculator-screen">
-            <div class="calc-display" id="calc-display">0</div>
-            <div class="calc-buttons">
-                <button class="calc-btn" onclick="calcClear()">C</button>
-                <button class="calc-btn" onclick="calcPress('(')">(</button>
-                <button class="calc-btn" onclick="calcPress(')')">)</button>
-                <button class="calc-btn operator" onclick="calcPress('/')">÷</button>
-                
-                <button class="calc-btn" onclick="calcPress('7')">7</button>
-                <button class="calc-btn" onclick="calcPress('8')">8</button>
-                <button class="calc-btn" onclick="calcPress('9')">9</button>
-                <button class="calc-btn operator" onclick="calcPress('*')">×</button>
-                
-                <button class="calc-btn" onclick="calcPress('4')">4</button>
-                <button class="calc-btn" onclick="calcPress('5')">5</button>
-                <button class="calc-btn" onclick="calcPress('6')">6</button>
-                <button class="calc-btn operator" onclick="calcPress('-')">-</button>
-                
-                <button class="calc-btn" onclick="calcPress('1')">1</button>
-                <button class="calc-btn" onclick="calcPress('2')">2</button>
-                <button class="calc-btn" onclick="calcPress('3')">3</button>
-                <button class="calc-btn operator" onclick="calcPress('+')">+</button>
-                
-                <button class="calc-btn" onclick="calcPress('0')" style="grid-column: span 2; max-width: 100%; border-radius: 35px;">0</button>
-                <button class="calc-btn" onclick="calcPress('.')">.</button>
-                <button class="calc-btn equal" onclick="calcCalculate()">=</button>
+    <div class="app-frame">
+        <!-- DISGUISE: NOTES APP -->
+        <div id="notes-container">
+            <div class="notes-header">
+                <h3><i class="fa-solid fa-file-lines"></i> Workspace Quick Notes</h3>
+                <i class="fa-solid fa-sliders" id="secret-trigger" style="cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
+            </div>
+            <div class="notes-body">
+                <textarea placeholder="Write meeting notes, tasks, or project reminders here..."></textarea>
             </div>
         </div>
 
-        <!-- REAL CHAT APPLICATION -->
-        <div id="chat-app" class="hidden">
-            <header>
-                <div class="header-left">
-                    <div class="avatar">🔒</div>
-                    <div class="header-info">
-                        <h2>Secure Space</h2>
-                        <p>End-to-End Private</p>
+        <!-- PROFESSIONAL WORKSPACE CHAT UI -->
+        <div id="chat-container">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <i class="fa-solid fa-arrow-left" id="back-to-notes" title="Return"></i>
+                    <div class="avatar-circle">PA</div>
+                    <div class="user-info">
+                        <h4>Project Alpha Sync</h4>
+                        <span>Online • Secured</span>
                     </div>
                 </div>
-                <button class="lock-btn" onclick="lockApp()">Lock 🔒</button>
-            </header>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <i class="fa-solid fa-phone" title="Voice Call" onclick="alert('Connecting secure audio channel...')"></i>
+                    <i class="fa-solid fa-lock" id="panic-lock" title="Lock Workspace" style="cursor: pointer;"></i>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="messageBox"></div>
 
-            <div id="chat-box"></div>
+            <!-- Emoji Picker -->
+            <div id="emoji-picker">
+                <span>😊</span><span>😂</span><span>❤️</span><span>😍</span><span>👍</span><span>🔥</span>
+                <span>✨</span><span>🚀</span><span>💻</span><span>💡</span><span>🎉</span><span>🎯</span>
+                <span>😎</span><span>🙏</span><span>🙌</span><span>😢</span><span>✨</span><span>🤔</span>
+                <span>💯</span><span>👏</span><span>⭐</span><span>⚡</span><span>🎉</span><span>💬</span>
+            </div>
 
-            <form id="form" action="">
-                <input id="nameInput" type="text" placeholder="Naam" required autocomplete="off" />
-                <input id="input" type="text" placeholder="Message likhein..." required autocomplete="off" />
-                <button type="submit">➤</button>
-            </form>
+            <!-- Chat Input Container -->
+            <div class="chat-input-container">
+                <div class="sender-bar">
+                    <div class="sender-left">
+                        <label><i class="fa-solid fa-user-pen"></i> Name:</label>
+                        <input type="text" id="activeSenderName" placeholder="e.g. Ritik" value="Ritik">
+                    </div>
+                    
+                    <div class="translate-wrapper">
+                        <button class="translate-btn" id="translateMenuBtn" type="button">
+                            <i class="fa-solid fa-language"></i> Translate <i class="fa-solid fa-caret-down"></i>
+                        </button>
+                        <div id="translateDropdown">
+                            <div onclick="setLanguage('original')">Original Text</div>
+                            <div onclick="setLanguage('english')">English (Correct)</div>
+                            <div onclick="setLanguage('hinglish')">Hinglish</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="actions-icon">
+                        <i class="fa-regular fa-face-smile" id="emoji-btn" title="Emoji"></i>
+                        <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
+                        <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
+                    </div>
+                    <input type="text" class="msg-box" id="messageInput" placeholder="Type hinglish or english...">
+                    <i class="fa-solid fa-microphone" id="mic-btn" title="Click to Record Voice Note"></i>
+                    <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
-
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- PIN MODAL -->
+    <div id="passcode-modal">
+        <div class="modal-content">
+            <h3>Security Verification</h3>
+            <p>Enter 4-digit workspace access PIN</p>
+            <input type="password" id="passcodeInput" maxlength="4" inputmode="numeric">
+            <button id="verifyPin">Authorize</button>
+            <span class="clear-history" id="clearDataBtn">Purge Chat Logs</span>
+        </div>
+    </div>
+
     <script>
-        const SECRET_PIN = "1432"; 
-        let calcInput = "";
-
-        function calcPress(val) {
-            if(calcInput === "0") calcInput = "";
-            calcInput += val;
-            document.getElementById('calc-display').innerText = calcInput;
-        }
-
-        function calcClear() {
-            calcInput = "";
-            document.getElementById('calc-display').innerText = "0";
-        }
-
-        function calcCalculate() {
-            try {
-                if(calcInput.trim() === SECRET_PIN) {
-                    openChatApp();
-                    calcClear();
-                    return;
-                }
-                let result = eval(calcInput);
-                document.getElementById('calc-display').innerText = result;
-                calcInput = result.toString();
-            } catch (e) {
-                document.getElementById('calc-display').innerText = "Error";
-                calcInput = "";
-            }
-        }
-
-        function openChatApp() {
-            document.getElementById('calculator-screen').classList.add('hidden');
-            document.getElementById('chat-app').classList.remove('hidden');
-            // Mobile back button support ke liye history state add ki
-            history.pushState({ screen: 'chat' }, '', '');
-        }
-
-        function lockApp() {
-            document.getElementById('chat-app').classList.add('hidden');
-            document.getElementById('calculator-screen').classList.remove('hidden');
-            calcClear();
-            // History manage karne ke liye agar chat se lock kiye toh back state adjust ho jaye
-            if (history.state && history.state.screen === 'chat') {
-                history.back();
-            }
-        }
-
-        // Mobile ka back button press hone par handle karna
-        window.addEventListener('popstate', function(event) {
-            const chatApp = document.getElementById('chat-app');
-            if (!chatApp.classList.contains('hidden')) {
-                // Agar chat khuli hai aur user ne back dabaya, toh app lock ho jaye
-                document.getElementById('chat-app').classList.add('hidden');
-                document.getElementById('calculator-screen').classList.remove('hidden');
-                calcClear();
-            }
-        });
-
-        // --- CHAT LOGIC ---
         const socket = io();
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
-        const nameInput = document.getElementById('nameInput');
-        const chatBox = document.getElementById('chat-box');
 
-        if(localStorage.getItem('chat_user_name')) {
-            nameInput.value = localStorage.getItem('chat_user_name');
-        }
-
-        nameInput.addEventListener('input', function() {
-            localStorage.setItem('chat_user_name', nameInput.value.trim());
+        document.getElementById('secret-trigger').addEventListener('click', () => {
+            document.getElementById('passcode-modal').style.display = 'flex';
+            document.getElementById('passcodeInput').focus();
         });
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (input.value.trim() && nameInput.value.trim()) {
-                const messageData = {
-                    name: nameInput.value.trim(),
-                    text: input.value.trim(),
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                };
-                socket.emit('chat message', messageData);
-                input.value = '';
+        const SECRET_PIN = "2580"; 
+
+        function handleAccess() {
+            const enteredPin = document.getElementById('passcodeInput').value;
+            if (enteredPin === SECRET_PIN) {
+                document.getElementById('passcode-modal').style.display = 'none';
+                document.getElementById('chat-container').style.display = 'flex';
+                history.pushState({chatOpen: true}, "", "");
+                scrollToBottom();
+            } else {
+                const btn = document.querySelector('#verifyPin');
+                btn.innerText = "Access Denied";
+                btn.style.background = "#ef4444";
+                setTimeout(() => {
+                    btn.innerText = "Authorize";
+                    btn.style.background = "#0f172a";
+                    document.getElementById('passcodeInput').value = '';
+                }, 1000);
+            }
+        }
+
+        document.getElementById('verifyPin').addEventListener('click', handleAccess);
+        document.getElementById('passcodeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAccess();
+        });
+
+        function lockScreen() {
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('passcodeInput').value = '';
+            document.getElementById('emoji-picker').style.display = 'none';
+            document.getElementById('translateDropdown').style.display = 'none';
+        }
+
+        document.getElementById('back-to-notes').addEventListener('click', () => {
+            lockScreen();
+            if(history.state && history.state.chatOpen) history.back();
+        });
+
+        document.getElementById('panic-lock').addEventListener('click', () => {
+            lockScreen();
+            if(history.state && history.state.chatOpen) history.back();
+        });
+
+        window.addEventListener('popstate', () => { lockScreen(); });
+
+        // Emoji Picker Logic
+        const emojiBtn = document.getElementById('emoji-btn');
+        const emojiPicker = document.getElementById('emoji-picker');
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid';
+            document.getElementById('translateDropdown').style.display = 'none';
+        });
+
+        document.querySelectorAll('#emoji-picker span').forEach(el => {
+            el.addEventListener('click', () => {
+                document.getElementById('messageInput').value += el.innerText;
+                document.getElementById('messageInput').focus();
+            });
+        });
+
+        // Translate Menu Toggle
+        const translateMenuBtn = document.getElementById('translateMenuBtn');
+        const translateDropdown = document.getElementById('translateDropdown');
+        
+        translateMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            translateDropdown.style.display = translateDropdown.style.display === 'block' ? 'none' : 'block';
+            emojiPicker.style.display = 'none';
+        });
+
+        let originalTypedText = "";
+        const messageInput = document.getElementById('messageInput');
+
+        messageInput.addEventListener('input', () => {
+            originalTypedText = messageInput.value;
+        });
+
+        function setLanguage(lang) {
+            translateDropdown.style.display = 'none';
+            let currentVal = messageInput.value.trim();
+
+            if (lang === 'original') {
+                if (originalTypedText !== "") {
+                    messageInput.value = originalTypedText;
+                }
+            } else {
+                if (originalTypedText === "" || messageInput.value !== originalTypedText) {
+                    originalTypedText = currentVal;
+                }
+                let text = originalTypedText;
+
+                if (lang === 'english') {
+                    let converted = text
+                        .replace(/kya kar rhi ho|kya kr rhi ho|kya kar rahe ho|kya kr rhe ho|kya kar rahi ho/gi, "What are you doing")
+                        .replace(/kya haal hai|kaise ho/gi, "How are you")
+                        .replace(/khaana ho gaya|khana khaye/gi, "Have you eaten your meal")
+                        .replace(/theek hai|thik hai/gi, "Alright")
+                        .replace(/kahan ho|kaha ho/gi, "Where are you")
+                        .replace(/baad me baat karte hain|kal baat karenge/gi, "We will talk later")
+                        .replace(/suno na|suno ek baat batao/gi, "Listen to me")
+                        .replace(/kya hua|kya ho gaya/gi, "What happened")
+                        .replace(/nahi|nhi/gi, "No")
+                        .replace(/haan|ha/gi, "Yes")
+                        .replace(/acha|achha/gi, "Okay");
+
+                    converted = converted.charAt(0).toUpperCase() + converted.slice(1);
+                    if (!converted.endsWith(".") && !converted.endsWith("?") && !converted.endsWith("!")) {
+                        converted += ".";
+                    }
+                    messageInput.value = converted;
+
+                } else if (lang === 'hinglish') {
+                    let converted = text
+                        .replace(/what are you doing/gi, "kya kar rahe ho")
+                        .replace(/how are you/gi, "kya haal hai")
+                        .replace(/where are you/gi, "kaha ho")
+                        .replace(/i am fine/gi, "main theek hoon")
+                        .replace(/good night/gi, "good night")
+                        .replace(/what happened/gi, "kya hua")
+                        .replace(/listen to me/gi, "suno na")
+                        .replace(/okay|alright/gi, "theek hai");
+
+                    messageInput.value = converted;
+                }
+            }
+        }
+
+        document.addEventListener('click', () => { 
+            emojiPicker.style.display = 'none'; 
+            translateDropdown.style.display = 'none';
+        });
+
+        // Real Voice Recording Feature
+        let mediaRecorder;
+        let audioChunks = [];
+        const micBtn = document.getElementById('mic-btn');
+
+        micBtn.addEventListener('click', async () => {
+            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => {
+                            const base64Audio = reader.result;
+                            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const audioHTML = `<audio controls src="${base64Audio}"></audio>`;
+                            socket.emit('send_message', { sender: senderName, text: audioHTML, time: timeStr });
+                        };
+                    };
+
+                    mediaRecorder.start();
+                    micBtn.classList.add('recording');
+                    micBtn.title = "Recording... Click to Stop";
+                } catch (err) {
+                    alert("Microphone permission denied or not available!");
+                }
+            } else if (mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                micBtn.classList.remove('recording');
+                micBtn.title = "Click to Record Voice Note";
             }
         });
 
-        socket.on('chat message', function(data) {
-            const item = document.createElement('div');
-            item.classList.add('message');
-            
-            const isSent = nameInput.value && data.name.toLowerCase() === nameInput.value.trim().toLowerCase();
-            item.classList.add(isSent ? 'sent' : 'received');
+        // File / Image Attachment Feature
+        const attachBtn = document.getElementById('attach-btn');
+        const fileInput = document.getElementById('fileInput');
 
-            item.innerHTML = `
-                <span class="sender">${data.name}</span>
-                <span>${data.text}</span>
-                <span class="time">${data.time || ''}</span>
-            `;
-            chatBox.appendChild(item);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        attachBtn.addEventListener('click', () => { fileInput.click(); });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+            if (file) {
+                const reader = new FileReader();
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                reader.onload = function(uploadEvent) {
+                    let contentHTML = "";
+                    if (file.type.startsWith('image/')) {
+                        contentHTML = `<img src="${uploadEvent.target.result}" alt="Attachment">`;
+                    } else {
+                        contentHTML = `<i class="fa-solid fa-file-lines"></i> ${file.name} (Attached)`;
+                    }
+                    socket.emit('send_message', { sender: senderName, text: contentHTML, time: timeStr });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Socket.io Live Chat Synchronization
+        const sendBtn = document.getElementById('sendBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        socket.on('load_history', (history) => {
+            messageBox.innerHTML = '';
+            if(history.length === 0) {
+                messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Secure session initialized.<span class="time">Just now</span></div>`;
+                return;
+            }
+            history.forEach(msg => {
+                appendMessageUI(msg.sender, msg.text, msg.time);
+            });
+            scrollToBottom();
+        });
+
+        socket.on('receive_message', (msg) => {
+            appendMessageUI(msg.sender, msg.text, msg.time);
+            scrollToBottom();
+        });
+
+        socket.on('history_cleared', () => {
+            messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<span class="time">Just now</span></div>`;
+        });
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+            if (text !== '') {
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                socket.emit('send_message', { sender: senderName, text: text, time: timeStr });
+                messageInput.value = '';
+                originalTypedText = ""; 
+                emojiPicker.style.display = 'none';
+                translateDropdown.style.display = 'none';
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function appendMessageUI(sender, text, time) {
+            const msgDiv = document.createElement('div');
+            const currentTypingName = document.getElementById('activeSenderName').value.trim();
+            const isMe = (sender.toLowerCase() === currentTypingName.toLowerCase());
+            
+            msgDiv.classList.add('message', isMe ? 'sent' : 'received');
+            msgDiv.innerHTML = `<span class="msg-sender-name">${sender}</span>${text} <span class="time">${time}</span>`;
+            messageBox.appendChild(msgDiv);
+        }
+
+        function scrollToBottom() {
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
+
+        document.getElementById('clearDataBtn').addEventListener('click', () => {
+            if(confirm("Permanently purge all workspace logs?")) {
+                socket.emit('clear_history');
+                alert("Logs purged successfully.");
+            }
         });
     </script>
 </body>
