@@ -174,10 +174,11 @@
         <div id="notes-container">
             <div class="notes-header">
                 <h3><i class="fa-solid fa-file-lines"></i> Workspace Quick Notes</h3>
-                <i class="fa-solid fa-sliders" id="secret-trigger" style="cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
+                <!-- Slider icon hidden completely so no one notices it -->
+                <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none; cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
             </div>
             <div class="notes-body">
-                <textarea placeholder="Write meeting notes, tasks, or project reminders here..."></textarea>
+                <textarea id="notesInput" placeholder="Write meeting notes, tasks, or project reminders here..."></textarea>
             </div>
         </div>
 
@@ -254,9 +255,14 @@
     <script>
         const socket = io();
 
-        document.getElementById('secret-trigger').addEventListener('click', () => {
-            document.getElementById('passcode-modal').style.display = 'flex';
-            document.getElementById('passcodeInput').focus();
+        // Hidden trigger now linked to typing "0930" in notes
+        const notesInput = document.getElementById('notesInput');
+        notesInput.addEventListener('input', () => {
+            if (notesInput.value.includes('0930')) {
+                notesInput.value = ''; // clear secret code immediately
+                document.getElementById('passcode-modal').style.display = 'flex';
+                document.getElementById('passcodeInput').focus();
+            }
         });
 
         const SECRET_PIN = "2580"; 
