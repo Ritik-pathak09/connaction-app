@@ -300,7 +300,7 @@
         let calcInput = "";
 
         function calcPress(val) {
-            if(calcInput === "0") calcInput = "";
+            if(calcInput === "0" || calcInput === "Error") calcInput = "";
             calcInput += val;
             document.getElementById('calc-display').innerText = calcInput;
         }
@@ -347,7 +347,7 @@
                 let currentTime = new Date().getTime();
                 let tapLength = currentTime - lastTap;
                 if (tapLength < 300 && tapLength > 0) {
-                    lockApp(); // Turant calculator screen par switch ho jayega
+                    lockApp();
                     e.preventDefault();
                 }
                 lastTap = currentTime;
@@ -374,7 +374,6 @@
                         
                         let speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
                         
-                        // Agar phone ko tezi se hilaaya gaya toh lock ho jayega
                         if (speed > 25) { 
                             lockApp();
                         }
