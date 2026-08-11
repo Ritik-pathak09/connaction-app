@@ -296,7 +296,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const SECRET_PIN = "1432"; // Apna secret PIN yahan change kar sakte hain
+        const SECRET_PIN = "1432";
         let calcInput = "";
 
         function calcPress(val) {
@@ -337,11 +337,13 @@
             calcClear();
         }
 
-        // --- PANIC FEATURES: DOUBLE TAP & SHAKE TO LOCK ---
+        // --- PANIC FEATURES (NO TIMER, MANUAL SHAKE & DOUBLE TAP ONLY) ---
         
-        // 1. Double Tap Anywhere to Lock (Jab chat khuli ho)
+        // 1. Double Tap Anywhere on Header to Lock (Taaki chat scroll karte waqt galti se lock na ho, header par double tap karne se ho)
         let lastTap = 0;
-        document.addEventListener('touchend', function(e) {
+        const chatHeader = document.querySelector('header');
+        
+        chatHeader.addEventListener('touchend', function(e) {
             let chatApp = document.getElementById('chat-app');
             if (!chatApp.classList.contains('hidden')) {
                 let currentTime = new Date().getTime();
@@ -354,7 +356,7 @@
             }
         });
 
-        // 2. Shake Phone to Lock (Mobile sensors ke zariye)
+        // 2. Shake Phone to Lock (Tezi se hilane par hi band hoga)
         let lastX = 0, lastY = 0, lastZ = 0;
         let lastUpdate = 0;
         
@@ -374,7 +376,8 @@
                         
                         let speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
                         
-                        if (speed > 25) { 
+                        // High threshold taaki normal use mein band na ho
+                        if (speed > 45) { 
                             lockApp();
                         }
                         lastX = x;
