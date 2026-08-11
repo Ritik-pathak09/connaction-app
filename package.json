@@ -1,13 +1,13 @@
 {
-  "name": "private-chat",
+  "name": "connection-app",
   "version": "1.0.0",
-  "description": "Private chat app for couples",
+  "description": "Real-time workspace chat app",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": {
-    "express": "^4.19.2",
-    "socket.io": "^4.7.5"
+  dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
   }
 }
