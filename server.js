@@ -1,27 +1,34 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
+
+let chatHistory = [];
 
 io.on('connection', (socket) => {
-    console.log('Ek user connect ho gaya:', socket.id);
+    // Purani chat bhejain naye user ko
+    socket.emit('load_history', chatHistory);
 
-    socket.on('chat message', (data) => {
-        io.emit('chat message', data);
+    // Jab koi naya message aaye
+    socket.on('send_message', (data) => {
+        chatHistory.push(data);
+        if (chatHistory.length > 100) chatHistory.shift(); // limit to 100 msgs
+        io.emit('receive_message', data);
     });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnect ho gaya');
+    // Clear history
+    socket.on('clear_history', () => {
+        chatHistory = [];
+        io.emit('history_cleared');
     });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server port ${PORT} par chal raha hai`);
+    console.log(`Server running on port ${PORT}`);
 });
