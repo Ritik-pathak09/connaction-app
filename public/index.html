@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Calculator & Notes</title> <!-- Cover title -->
+    <title>Smart Calculator & Notes</title>
     <style>
         * {
             box-sizing: border-box;
@@ -20,7 +20,7 @@
         }
         .app-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 400px;
             height: 100vh;
             background: #efeae2;
             display: flex;
@@ -32,11 +32,12 @@
         @media (min-width: 481px) {
             .app-container {
                 height: 85vh;
+                max-height: 700px;
                 border-radius: 16px;
             }
         }
 
-        /* --- FAKE CALCULATOR SCREEN (STEALTH COVER) --- */
+        /* --- FAKE CALCULATOR SCREEN (FIXED SIZE) --- */
         #calculator-screen {
             position: absolute;
             top: 0;
@@ -48,34 +49,39 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 20px;
+            padding: 16px;
         }
         .calc-display {
             color: #ffffff;
-            font-size: 48px;
+            font-size: 36px;
             text-align: right;
-            padding: 20px 10px;
+            padding: 15px 10px;
             word-break: break-all;
             background: #262626;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .calc-buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            padding-bottom: 20px;
+            gap: 10px;
+            padding-bottom: 10px;
         }
         .calc-btn {
             background: #333333;
             color: white;
             border: none;
-            padding: 20px;
-            font-size: 20px;
+            font-size: 18px;
             border-radius: 50%;
             cursor: pointer;
             transition: background 0.2s;
             aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 70px;
+            margin: 0 auto;
         }
         .calc-btn:active { background: #525252; }
         .calc-btn.operator { background: #ff9f0a; }
@@ -258,7 +264,7 @@
                 <button class="calc-btn" onclick="calcPress('3')">3</button>
                 <button class="calc-btn operator" onclick="calcPress('+')">+</button>
                 
-                <button class="calc-btn" onclick="calcPress('0')" style="grid-column: span 2; border-radius: 40px;">0</button>
+                <button class="calc-btn" onclick="calcPress('0')" style="grid-column: span 2; max-width: 100%; border-radius: 35px;">0</button>
                 <button class="calc-btn" onclick="calcPress('.')">.</button>
                 <button class="calc-btn equal" onclick="calcCalculate()">=</button>
             </div>
@@ -290,10 +296,9 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const SECRET_PIN = "1432"; // <-- Yahan apna secret PIN badal sakte hain (Calculator mein type karke '=' dabana hai)
+        const SECRET_PIN = "1432"; // Apna secret PIN yahan change kar sakte hain
         let calcInput = "";
 
-        // Calculator Logic & Secret Trigger
         function calcPress(val) {
             if(calcInput === "0") calcInput = "";
             calcInput += val;
@@ -307,7 +312,6 @@
 
         function calcCalculate() {
             try {
-                // Agar secret PIN type karke '=' dabaya, toh chat khul jayegi
                 if(calcInput.trim() === SECRET_PIN) {
                     openChatApp();
                     calcClear();
@@ -340,7 +344,6 @@
         const nameInput = document.getElementById('nameInput');
         const chatBox = document.getElementById('chat-box');
 
-        // Saved Name localStorage se load karna taaki baar-baar na likhna pade
         if(localStorage.getItem('chat_user_name')) {
             nameInput.value = localStorage.getItem('chat_user_name');
         }
