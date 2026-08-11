@@ -144,15 +144,6 @@
         #mic-btn { cursor: pointer; color: #54656f; font-size: 18px; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Emoji Box Popup */
-        #emoji-picker {
-            display: none; position: absolute; bottom: 110px; left: 10px; background: #ffffff;
-            padding: 12px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            grid-template-columns: repeat(6, 1fr); gap: 10px; z-index: 10; max-height: 200px; overflow-y: auto; width: 280px; border: 1px solid #d1d7db;
-        }
-        #emoji-picker span { font-size: 22px; cursor: pointer; text-align: center; padding: 4px; border-radius: 4px; }
-        #emoji-picker span:hover { background: #f0f2f5; }
-
         /* --- PASSCODE MODAL --- */
         #passcode-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -216,14 +207,6 @@
                 <button id="cancel-img-btn" title="Cancel Image"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Emoji Picker -->
-            <div id="emoji-picker">
-                <span>😊</span><span>😂</span><span>❤️</span><span>😍</span><span>👍</span><span>🔥</span>
-                <span>✨</span><span>🚀</span><span>💻</span><span>💡</span><span>🎉</span><span>🎯</span>
-                <span>😎</span><span>🙏</span><span>🙌</span><span>😢</span><span>✨</span><span>🤔</span>
-                <span>💯</span><span>👏</span><span>⭐</span><span>⚡</span><span>🎉</span><span>💬</span>
-            </div>
-
             <!-- Chat Input Container -->
             <div class="chat-input-container">
                 <div class="sender-bar">
@@ -246,7 +229,6 @@
 
                 <div class="chat-input-area">
                     <div class="actions-icon">
-                        <i class="fa-regular fa-face-smile" id="emoji-btn" title="Emoji"></i>
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
@@ -306,7 +288,6 @@
         function lockScreen() {
             document.getElementById('chat-container').style.display = 'none';
             document.getElementById('passcodeInput').value = '';
-            document.getElementById('emoji-picker').style.display = 'none';
             document.getElementById('translateDropdown').style.display = 'none';
         }
 
@@ -322,28 +303,6 @@
 
         window.addEventListener('popstate', () => { lockScreen(); });
 
-        // Emoji Picker Logic (Keeps picker open and prevents keyboard/screen bouncing)
-        const emojiBtn = document.getElementById('emoji-btn');
-        const emojiPicker = document.getElementById('emoji-picker');
-        
-        emojiBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid';
-            document.getElementById('translateDropdown').style.display = 'none';
-        });
-
-        emojiPicker.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        document.querySelectorAll('#emoji-picker span').forEach(el => {
-            el.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('messageInput').value += el.innerText;
-                // messageInput.focus() intentionally omitted to avoid closing keyboard/picker
-            });
-        });
-
         // Translate Menu Toggle
         const translateMenuBtn = document.getElementById('translateMenuBtn');
         const translateDropdown = document.getElementById('translateDropdown');
@@ -351,7 +310,6 @@
         translateMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             translateDropdown.style.display = translateDropdown.style.display === 'block' ? 'none' : 'block';
-            emojiPicker.style.display = 'none';
         });
 
         translateDropdown.addEventListener('click', (e) => {
@@ -443,7 +401,6 @@
         }
 
         document.addEventListener('click', () => { 
-            emojiPicker.style.display = 'none'; 
             translateDropdown.style.display = 'none';
         });
 
@@ -490,7 +447,7 @@
             }
         });
 
-        // WhatsApp Style Image Preview & Send Logic
+        // WhatsApp Style Image Preview & Send Logic (Fixed for instant working on mobile & PC)
         const attachBtn = document.getElementById('attach-btn');
         const fileInput = document.getElementById('fileInput');
         const imagePreviewBar = document.getElementById('image-preview-bar');
@@ -591,7 +548,6 @@
                 originalTypedText = ""; 
             }
 
-            emojiPicker.style.display = 'none';
             translateDropdown.style.display = 'none';
         }
 
