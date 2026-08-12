@@ -28,6 +28,7 @@
             align-items: center;
             overflow: hidden;
             position: fixed;
+            inset: 0;
         }
 
         .app-frame {
@@ -67,8 +68,17 @@
 
         /* --- PROFESSIONAL WORKSPACE CHAT UI --- */
         #chat-container {
-            display: none; width: 100%; height: 100%; background: var(--chat-bg);
-            flex-direction: column; position: absolute; top: 0; left: 0; z-index: 3;
+            display: none; 
+            width: 100%; 
+            height: 100%; 
+            height: 100dvh; 
+            background: var(--chat-bg);
+            flex-direction: column; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 3;
+            overflow: hidden;
         }
         .chat-header {
             background: var(--header-pro); color: #fff; padding: 10px 14px;
@@ -88,10 +98,17 @@
         .user-info span { font-size: 11px; color: #e9edef; display: block; }
         
         .chat-messages {
-            flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+            flex: 1; 
+            padding: 15px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
             background-color: #efeae2;
-            background-image: radial-gradient(#d1d7db 0.75px, transparent 0.75px); background-size: 20px 20px;
+            background-image: radial-gradient(#d1d7db 0.75px, transparent 0.75px); 
+            background-size: 20px 20px;
             -webkit-overflow-scrolling: touch;
+            min-height: 0;
         }
         .message {
             max-width: 85%; padding: 8px 12px; border-radius: 7.5px; font-size: 14px;
