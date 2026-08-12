@@ -18,12 +18,13 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// Message Schema & Model
+// Message Schema & Model (Added time field to store live IST time)
 const messageSchema = new mongoose.Schema({
     id: String,
     sender: String,
     text: String,
     image: String,
+    time: String,
     timestamp: { type: Date, default: Date.now }
 });
 
@@ -64,11 +65,20 @@ io.on('connection', async (socket) => {
     // Jab koi naya message aaye toh database mein save karo
     socket.on('send_message', async (data) => {
         try {
+            // Fallback IST time if not passed from client
+            const istTime = data.time || new Date().toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
             const newMessage = new Message({
                 id: data.id || Date.now().toString(),
                 sender: data.sender,
                 text: data.text,
-                image: data.image
+                image: data.image,
+                time: istTime
             });
             await newMessage.save();
             io.emit('receive_message', newMessage);
