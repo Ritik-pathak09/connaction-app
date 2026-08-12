@@ -21,6 +21,7 @@
         html, body {
             width: 100%;
             height: 100%;
+            height: 100dvh;
             background-color: #cbd5e1;
             display: flex;
             justify-content: center;
@@ -34,8 +35,9 @@
             width: 100%;
             max-width: 480px;
             height: 100%;
+            height: 100dvh;
             background: #fff;
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
@@ -292,17 +294,6 @@
     </div>
 
     <script>
-        // Mobile keyboard viewport adjustment fix
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                const appFrame = document.getElementById('appFrame');
-                if (window.innerWidth <= 480) {
-                    appFrame.style.height = window.visualViewport.height + 'px';
-                    appFrame.style.top = window.visualViewport.offsetTop + 'px';
-                }
-            });
-        }
-
         const socket = io();
 
         // Hidden trigger now linked to typing "0930" in notes
