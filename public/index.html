@@ -21,7 +21,6 @@
         html, body {
             width: 100%;
             height: 100%;
-            height: 100dvh;
             background-color: #cbd5e1;
             display: flex;
             justify-content: center;
@@ -35,16 +34,18 @@
             width: 100%;
             max-width: 480px;
             height: 100%;
-            height: 100dvh;
             background: #fff;
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
         @media(min-width: 481px) {
-            .app-frame { height: 90vh; border-radius: 12px; max-height: 850px; }
+            .app-frame { height: 90vh; border-radius: 12px; max-height: 850px; position: relative; transform: none; left: auto; }
         }
 
         /* --- DISGUISE: NOTES APP --- */
@@ -71,7 +72,6 @@
             display: none; 
             width: 100%; 
             height: 100%; 
-            height: 100dvh; 
             background: var(--chat-bg);
             flex-direction: column; 
             position: absolute; 
@@ -208,7 +208,7 @@
 </head>
 <body>
 
-    <div class="app-frame">
+    <div class="app-frame" id="appFrame">
         <!-- DISGUISE: NOTES APP -->
         <div id="notes-container">
             <div class="notes-header">
@@ -292,6 +292,17 @@
     </div>
 
     <script>
+        // Mobile keyboard viewport adjustment fix
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const appFrame = document.getElementById('appFrame');
+                if (window.innerWidth <= 480) {
+                    appFrame.style.height = window.visualViewport.height + 'px';
+                    appFrame.style.top = window.visualViewport.offsetTop + 'px';
+                }
+            });
+        }
+
         const socket = io();
 
         // Hidden trigger now linked to typing "0930" in notes
