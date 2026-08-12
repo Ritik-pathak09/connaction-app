@@ -605,11 +605,21 @@
             }
 
             translateDropdown.style.display = 'none';
+            
+            // Keep keyboard open by keeping focus on the input box
+            messageInput.focus();
         }
 
-        sendBtn.addEventListener('click', sendMessage);
+        sendBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevents button from stealing focus
+            sendMessage();
+        });
+
         messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
         });
 
         function appendMessageUI(id, sender, text, time) {
