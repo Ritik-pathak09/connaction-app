@@ -12,7 +12,7 @@ const io = new Server(server, {
 app.use(express.static('public'));
 
 // MongoDB Connection using Environment Variable or your connection string
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://ritikpathak8570_db_user:ritik123@cluster0.vqrk1qc.mongodb.net/connection?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://ritikpathak8570_db_user:MRQnWJf1nP9EaxvZ@cluster0.vqrk1qc.mongodb.net/connection?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
