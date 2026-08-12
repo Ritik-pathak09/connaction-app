@@ -483,7 +483,7 @@
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
                             const base64Audio = reader.result;
-                            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const timeStr = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
                             const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                             const audioHTML = `<audio controls src="${base64Audio}"></audio>`;
                             socket.emit('send_message', { id: msgId, sender: senderName, text: audioHTML, time: timeStr });
@@ -576,7 +576,7 @@
 
         function sendMessage() {
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const timeStr = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
             
             // Send pending preview image first if exists
             if (pendingImageData) {
@@ -634,7 +634,7 @@
                 <div class="msg-text-content">${text}</div>
                 <div class="msg-footer">
                     <button class="delete-msg-btn" onclick="deleteMessage('${id}')" title="Delete message"><i class="fa-solid fa-trash"></i></button>
-                    <span class="time">${time}</span>
+                    <span class="time">${time || 'Just now'}</span>
                 </div>
             `;
             messageBox.appendChild(msgDiv);
