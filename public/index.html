@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Workspace & Notes Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/socket.io/socket.io.js"></script>
@@ -16,12 +16,31 @@
             --text-main: #111b21;
             --header-pro: #075e54;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: #cbd5e1; height: 100vh; height: 100dvh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            background-color: #cbd5e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: fixed;
+        }
 
         .app-frame {
-            width: 100%; max-width: 480px; height: 100%; height: 100dvh; background: #fff;
-            position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            height: 100dvh;
+            background: #fff;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         @media(min-width: 481px) {
             .app-frame { height: 90vh; border-radius: 12px; max-height: 850px; }
@@ -36,10 +55,11 @@
             background: #ffffff; border-bottom: 1px solid #e2e8f0;
             color: #0f172a; padding: 16px 20px; display: flex;
             justify-content: space-between; align-items: center;
+            flex-shrink: 0;
         }
         .notes-header h3 { font-size: 16px; font-weight: 600; color: #1e293b; }
         .notes-header h3 i { color: #0284c7; margin-right: 8px; }
-        .notes-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .notes-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
         .notes-body textarea {
             width: 100%; height: 100%; padding: 15px; border: 1px solid #cbd5e1;
             border-radius: 8px; resize: none; font-size: 14px; outline: none; background: #fff; color: #334155; line-height: 1.5;
@@ -55,24 +75,26 @@
             display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             z-index: 5; flex-shrink: 0;
         }
-        .chat-header-left { display: flex; align-items: center; gap: 10px; }
+        .chat-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
         .chat-header i { font-size: 18px; cursor: pointer; color: #e9edef; padding: 5px; }
         .chat-header i:hover { color: #fff; }
         
         .avatar-circle {
-            width: 40px; height: 40px; background: #25d366; border-radius: 50%;
+            width: 40px; height: 40px; min-width: 40px; background: #25d366; border-radius: 50%;
             display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 15px; color: white;
         }
-        .user-info h4 { font-size: 15px; font-weight: 600; color: #ffffff; }
-        .user-info span { font-size: 11px; color: #e9edef; }
+        .user-info { min-width: 0; overflow: hidden; }
+        .user-info h4 { font-size: 15px; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-info span { font-size: 11px; color: #e9edef; display: block; }
         
         .chat-messages {
-            flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+            flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
             background-color: #efeae2;
             background-image: radial-gradient(#d1d7db 0.75px, transparent 0.75px); background-size: 20px 20px;
+            -webkit-overflow-scrolling: touch;
         }
         .message {
-            max-width: 80%; padding: 8px 12px; border-radius: 7.5px; font-size: 14px;
+            max-width: 85%; padding: 8px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
             display: flex; flex-direction: column;
         }
@@ -98,7 +120,7 @@
         }
         #image-preview-bar img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d7db; }
         #image-preview-bar span { font-size: 13px; color: #111b21; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+        #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; min-width: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
         /* Input Panel with Inline Name & Translate Dropdown Bar */
         .chat-input-container { background: #f0f2f5; display: flex; flex-direction: column; width: 100%; z-index: 5; position: relative; border-top: 1px solid #d1d7db; flex-shrink: 0; }
@@ -106,15 +128,15 @@
         .sender-bar {
             display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: #ffffff; border-bottom: 1px solid #e2e8f0;
         }
-        .sender-left { display: flex; align-items: center; gap: 8px; }
-        .sender-left label { font-size: 12px; color: #667781; }
+        .sender-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .sender-left label { font-size: 12px; color: #667781; white-space: nowrap; }
         .sender-left input {
-            background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 4px; color: #111b21; font-size: 12px; width: 100px; outline: none;
+            background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 4px; color: #111b21; font-size: 12px; width: 90px; outline: none;
         }
         
         .translate-wrapper { position: relative; display: inline-block; }
         .translate-btn {
-            background: #00a884; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 4px;
+            background: #00a884; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 4px; white-space: nowrap;
         }
         .translate-btn:hover { background: #019575; }
 
@@ -128,12 +150,12 @@
         #translateDropdown div:hover { background: #f0f2f5; }
 
         .chat-input-area {
-            padding: 8px 14px; display: flex; align-items: center; gap: 10px; position: relative; width: 100%; background: #f0f2f5;
+            padding: 8px 14px; display: flex; align-items: center; gap: 8px; position: relative; width: 100%; background: #f0f2f5;
         }
-        .chat-input-area .actions-icon { display: flex; gap: 12px; color: #54656f; font-size: 18px; cursor: pointer; align-items: center; }
+        .chat-input-area .actions-icon { display: flex; gap: 10px; color: #54656f; font-size: 18px; cursor: pointer; align-items: center; }
         .chat-input-area input.msg-box {
             flex: 1; background: #ffffff; border: 1px solid #d1d7db; padding: 10px 14px; border-radius: 8px;
-            outline: none; font-size: 14px; color: #111b21; min-width: 0;
+            outline: none; font-size: 14px; color: #111b21; min-width: 0; -webkit-appearance: none;
         }
         .chat-input-area input.msg-box::placeholder { color: #8696a0; }
         .chat-input-area button {
@@ -141,24 +163,24 @@
             border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 15px;
         }
         #mic-btn.recording { color: #ef4444; animation: pulse 1s infinite; }
-        #mic-btn { cursor: pointer; color: #54656f; font-size: 18px; }
+        #mic-btn { cursor: pointer; color: #54656f; font-size: 18px; padding: 5px; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         /* --- PASSCODE MODAL --- */
         #passcode-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; z-index: 100;
+            background: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; z-index: 100; padding: 20px;
         }
         .modal-content {
             background: #ffffff; padding: 30px; border-radius: 12px;
-            width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
         .modal-content h3 { font-size: 17px; margin-bottom: 5px; color: #0f172a; }
         .modal-content p { font-size: 12px; color: #64748b; margin-bottom: 20px; }
         .modal-content input {
             width: 100%; padding: 12px; margin-bottom: 15px;
             background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;
-            text-align: center; font-size: 20px; letter-spacing: 10px; color: #0f172a; outline: none;
+            text-align: center; font-size: 20px; letter-spacing: 10px; color: #0f172a; outline: none; -webkit-appearance: none;
         }
         .modal-content button {
             background: #0f172a; color: white; border: none;
@@ -193,7 +215,7 @@
                         <span>Online • Secured</span>
                     </div>
                 </div>
-                <div style="display: flex; gap: 15px; align-items: center;">
+                <div style="display: flex; gap: 15px; align-items: center; flex-shrink: 0;">
                     <i class="fa-solid fa-phone" title="Voice Call" onclick="alert('Connecting secure audio channel...')"></i>
                     <i class="fa-solid fa-lock" id="panic-lock" title="Lock Workspace" style="cursor: pointer;"></i>
                 </div>
