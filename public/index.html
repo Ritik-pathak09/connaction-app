@@ -111,11 +111,11 @@
             background-size: 20px 20px;
             -webkit-overflow-scrolling: touch;
             min-height: 0;
-            overscroll-behavior: contain; /* Prevents body pull-to-refresh / rubber-banding */
+            overscroll-behavior: contain;
             touch-action: pan-y;
         }
         .message {
-            max-width: 85%; padding: 8px 12px; border-radius: 7.5px; font-size: 14px;
+            max-width: 85%; padding: 8px 12px 6px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
             display: flex; flex-direction: column;
         }
@@ -125,8 +125,24 @@
         .msg-sender-name { font-size: 11px; font-weight: bold; color: #008069; margin-bottom: 3px; display: block; }
         .message.sent .msg-sender-name { color: #005c4b; }
 
-        .msg-footer { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 4px; }
-        .message .time { font-size: 10px; color: #667781; }
+        .msg-text-content { overflow-wrap: break-word; word-break: break-word; }
+
+        /* FIXED TIME & FOOTER ALIGNMENT */
+        .msg-footer { 
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; 
+            gap: 6px; 
+            margin-top: 2px; 
+            float: right;
+            margin-left: 10px;
+        }
+        .message .time { 
+            font-size: 10px; 
+            color: #667781; 
+            white-space: nowrap;
+            line-height: 1;
+        }
         .delete-msg-btn { font-size: 11px; color: #667781; cursor: pointer; display: none; background: none; border: none; padding: 0; }
         .message:hover .delete-msg-btn { display: inline-block; }
         .delete-msg-btn:hover { color: #ef4444; }
@@ -217,7 +233,6 @@
         <div id="notes-container">
             <div class="notes-header">
                 <h3><i class="fa-solid fa-file-lines"></i> Workspace Quick Notes</h3>
-                <!-- Slider icon hidden completely so no one notices it -->
                 <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none; cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
             </div>
             <div class="notes-body">
@@ -296,7 +311,6 @@
     </div>
 
     <script>
-        // Mobile keyboard viewport adjustment fix
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const appFrame = document.getElementById('appFrame');
@@ -307,7 +321,6 @@
             });
         }
 
-        // Prevent body/document elastic scrolling/pull-to-refresh on mobile
         document.addEventListener('touchmove', function(e) {
             if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea')) {
                 e.preventDefault();
@@ -316,11 +329,10 @@
 
         const socket = io();
 
-        // Hidden trigger now linked to typing "0930" in notes
         const notesInput = document.getElementById('notesInput');
         notesInput.addEventListener('input', () => {
             if (notesInput.value.includes('0930')) {
-                notesInput.value = ''; // clear secret code immediately
+                notesInput.value = ''; 
                 document.getElementById('passcode-modal').style.display = 'flex';
                 document.getElementById('passcodeInput').focus();
             }
@@ -370,7 +382,6 @@
 
         window.addEventListener('popstate', () => { lockScreen(); });
 
-        // Translate Menu Toggle
         const translateMenuBtn = document.getElementById('translateMenuBtn');
         const translateDropdown = document.getElementById('translateDropdown');
         
@@ -471,7 +482,6 @@
             translateDropdown.style.display = 'none';
         });
 
-        // Real Voice Recording Feature
         let mediaRecorder;
         let audioChunks = [];
         const micBtn = document.getElementById('mic-btn');
@@ -514,7 +524,6 @@
             }
         });
 
-        // WhatsApp Style Image Preview & Send Logic (Fixed & Stabilized)
         const attachBtn = document.getElementById('attach-btn');
         const fileInput = document.getElementById('fileInput');
         const imagePreviewBar = document.getElementById('image-preview-bar');
@@ -555,7 +564,6 @@
             fileInput.value = '';
         });
 
-        // Socket.io Live Chat Synchronization
         const sendBtn = document.getElementById('sendBtn');
         const messageBox = document.getElementById('messageBox');
 
@@ -589,7 +597,6 @@
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            // Send pending preview image first if exists
             if (pendingImageData) {
                 let contentHTML = "";
                 if (pendingImageData.type.startsWith('image/')) {
@@ -600,13 +607,11 @@
                 const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                 socket.emit('send_message', { id: imgMsgId, sender: senderName, text: contentHTML, time: timeStr });
                 
-                // Reset preview bar
                 pendingImageData = null;
                 imagePreviewBar.style.display = 'none';
                 fileInput.value = '';
             }
 
-            // Send text if present
             const text = messageInput.value.trim();
             if (text !== '') {
                 const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
@@ -616,13 +621,11 @@
             }
 
             translateDropdown.style.display = 'none';
-            
-            // Keep keyboard open by keeping focus on the input box
             messageInput.focus();
         }
 
         sendBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevents button from stealing focus
+            e.preventDefault();
             sendMessage();
         });
 
