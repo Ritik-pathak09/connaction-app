@@ -160,7 +160,7 @@
         .chat-input-container { background: #f0f2f5; display: flex; flex-direction: column; width: 100%; z-index: 5; position: relative; border-top: 1px solid #d1d7db; flex-shrink: 0; }
         
         .sender-bar {
-            display: none; /* Default hidden ab space bachane ke liye */
+            display: none; 
             align-items: center; justify-content: space-between; padding: 6px 14px; background: #ffffff; border-bottom: 1px solid #e2e8f0;
         }
         .sender-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -173,11 +173,19 @@
             padding: 8px 14px; display: flex; align-items: center; gap: 8px; position: relative; width: 100%; background: #f0f2f5;
         }
         .chat-input-area .actions-icon { display: flex; gap: 10px; color: #54656f; font-size: 18px; cursor: pointer; align-items: center; }
-        .chat-input-area input.msg-box {
+        
+        /* The hack: Styling a textarea to look exactly like a single line input */
+        .chat-input-area textarea.msg-box {
             flex: 1; background: #ffffff; border: 1px solid #d1d7db; padding: 10px 14px; border-radius: 8px;
             outline: none; font-size: 14px; color: #111b21; min-width: 0; -webkit-appearance: none;
+            resize: none;
+            height: 40px; 
+            line-height: 18px; 
+            overflow: hidden;
+            font-family: inherit;
         }
-        .chat-input-area input.msg-box::placeholder { color: #8696a0; }
+        .chat-input-area textarea.msg-box::placeholder { color: #8696a0; }
+        
         .chat-input-area button {
             background: #00a884; border: none; color: white; width: 40px; height: 40px; min-width: 40px;
             border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 15px;
@@ -219,7 +227,7 @@
                 <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none; cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
             </div>
             <div class="notes-body">
-                <textarea id="notesInput" placeholder="Write meeting notes, tasks, or project reminders here..." spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
+                <textarea id="notesInput" placeholder="Write meeting notes, tasks, or project reminders here..." spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
             </div>
         </div>
 
@@ -254,8 +262,7 @@
                 <div class="sender-bar">
                     <div class="sender-left">
                         <label><i class="fa-solid fa-user-pen"></i> Name:</label>
-                        <!-- Autocomplete "nope" hack is applied to strictly remove browser suggestions -->
-                        <input type="text" id="activeSenderName" placeholder="e.g. Ritik" value="Ritik" autocomplete="nope" spellcheck="false" autocorrect="off">
+                        <input type="text" id="activeSenderName" placeholder="e.g. Ritik" value="Ritik" autocomplete="off" spellcheck="false" autocorrect="off">
                     </div>
                 </div>
 
@@ -266,8 +273,9 @@
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
-                    <!-- Autocomplete "nope" hack added here too -->
-                    <input type="text" class="msg-box" id="messageInput" placeholder="Type a message..." autocomplete="nope" spellcheck="false" autocorrect="off">
+                    <!-- The TEXTAREA HACK is implemented here -->
+                    <textarea class="msg-box" id="messageInput" placeholder="Type a message..." rows="1" spellcheck="false" autocomplete="off" autocorrect="off"></textarea>
+                    
                     <i class="fa-solid fa-microphone" id="mic-btn" title="Click to Record Voice Note"></i>
                     <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -280,7 +288,6 @@
         <div class="modal-content">
             <h3>Security Verification</h3>
             <p>Enter 4-digit workspace access PIN</p>
-            <!-- Changed autocomplete to "one-time-code" to completely banish the password manager (key icon) -->
             <input type="password" id="passcodeInput" maxlength="4" inputmode="numeric" autocomplete="one-time-code">
             <button id="verifyPin">Authorize</button>
             <span class="clear-history" id="clearDataBtn">Purge Chat Logs</span>
@@ -528,7 +535,7 @@
 
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault();
+                e.preventDefault(); // Ye new line aane se rokega
                 sendMessage();
             }
         });
