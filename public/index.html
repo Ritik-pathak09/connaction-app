@@ -219,7 +219,7 @@
                 <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none; cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
             </div>
             <div class="notes-body">
-                <textarea id="notesInput" placeholder="Write meeting notes, tasks, or project reminders here..."></textarea>
+                <textarea id="notesInput" placeholder="Write meeting notes, tasks, or project reminders here..." spellcheck="false" autocomplete="off"></textarea>
             </div>
         </div>
 
@@ -254,7 +254,8 @@
                 <div class="sender-bar">
                     <div class="sender-left">
                         <label><i class="fa-solid fa-user-pen"></i> Name:</label>
-                        <input type="text" id="activeSenderName" placeholder="e.g. Ritik" value="Ritik">
+                        <!-- Autocomplete off and new-password added to prevent suggestions -->
+                        <input type="text" id="activeSenderName" placeholder="e.g. Ritik" value="Ritik" autocomplete="new-password" spellcheck="false" autocorrect="off">
                     </div>
                 </div>
 
@@ -265,7 +266,8 @@
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
-                    <input type="text" class="msg-box" id="messageInput" placeholder="Type a message...">
+                    <!-- Autocomplete off added to prevent suggestions -->
+                    <input type="text" class="msg-box" id="messageInput" placeholder="Type a message..." autocomplete="off" spellcheck="false" autocorrect="off">
                     <i class="fa-solid fa-microphone" id="mic-btn" title="Click to Record Voice Note"></i>
                     <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -278,7 +280,7 @@
         <div class="modal-content">
             <h3>Security Verification</h3>
             <p>Enter 4-digit workspace access PIN</p>
-            <input type="password" id="passcodeInput" maxlength="4" inputmode="numeric">
+            <input type="password" id="passcodeInput" maxlength="4" inputmode="numeric" autocomplete="new-password">
             <button id="verifyPin">Authorize</button>
             <span class="clear-history" id="clearDataBtn">Purge Chat Logs</span>
         </div>
