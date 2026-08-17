@@ -160,7 +160,8 @@
         .chat-input-container { background: #f0f2f5; display: flex; flex-direction: column; width: 100%; z-index: 5; position: relative; border-top: 1px solid #d1d7db; flex-shrink: 0; }
         
         .sender-bar {
-            display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: #ffffff; border-bottom: 1px solid #e2e8f0;
+            display: none; /* Default hidden ab space bachane ke liye */
+            align-items: center; justify-content: space-between; padding: 6px 14px; background: #ffffff; border-bottom: 1px solid #e2e8f0;
         }
         .sender-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .sender-left label { font-size: 12px; color: #667781; white-space: nowrap; }
@@ -259,6 +260,8 @@
 
                 <div class="chat-input-area">
                     <div class="actions-icon">
+                        <!-- Toggle button added here -->
+                        <i class="fa-solid fa-user-gear" id="toggle-sender-btn" title="Change Name"></i>
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
@@ -338,6 +341,7 @@
         function lockScreen() {
             document.getElementById('chat-container').style.display = 'none';
             document.getElementById('passcodeInput').value = '';
+            document.querySelector('.sender-bar').style.display = 'none'; // Lock hone par name hide kardo
         }
 
         document.getElementById('back-to-notes').addEventListener('click', () => {
@@ -351,6 +355,27 @@
         });
 
         window.addEventListener('popstate', () => { lockScreen(); });
+
+        /* --- SENDER NAME TOGGLE LOGIC --- */
+        const toggleSenderBtn = document.getElementById('toggle-sender-btn');
+        const senderBar = document.querySelector('.sender-bar');
+
+        toggleSenderBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (senderBar.style.display === 'flex') {
+                senderBar.style.display = 'none';
+            } else {
+                senderBar.style.display = 'flex';
+                document.getElementById('activeSenderName').focus(); // Automatically open keyboard for name
+            }
+        });
+
+        // Hide sender-bar when clicking anywhere else (auto-hide feature)
+        document.addEventListener('click', (e) => {
+            if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) {
+                senderBar.style.display = 'none';
+            }
+        });
 
         const messageInput = document.getElementById('messageInput');
 
