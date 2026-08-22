@@ -588,6 +588,21 @@
             }
         }
         setInterval(checkMidnightReset, 60000); // Checks every minute
+
+        // --- NEW AUTO-LOCK SECURITY FEATURES ADDED HERE ---
+        
+        // 1. Jab tum tab switch karoge ya app minimize karoge tab yeh chalega
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                lockScreen();
+            }
+        });
+
+        // 2. Agar page se galti se dhyan hat gaya (like notification swipe), tab yeh chalega
+        window.addEventListener("blur", function() {
+            lockScreen();
+        });
+        
     </script>
 </body>
 </html>
