@@ -97,7 +97,7 @@
             color: #64748b; font-size: 18px; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 12px);
         }
         .notes-bottom-toolbar .tools-left { display: flex; gap: 24px; }
-        .notes-bottom-toolbar .tools-right { color: var(--notes-theme); }
+        .notes-bottom-toolbar .tools-right { color: var(--notes-theme); cursor: pointer; }
 
         /* --- PROFESSIONAL WORKSPACE CHAT UI (UNTOUCHED) --- */
         #chat-container {
@@ -253,33 +253,36 @@
         <!-- --- ULTRA-REALISTIC NOTES UI --- -->
         <div id="notes-container">
             <div class="notes-header">
-                <div class="notes-header-left">
+                <div class="notes-header-left" id="fake-folders">
                     <i class="fa-solid fa-chevron-left"></i>
                     <span>Folders</span>
                 </div>
                 <div class="notes-header-right">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
-                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                    <i class="fa-solid fa-arrow-up-from-bracket" id="fake-share"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" id="fake-menu"></i>
                     <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none;"></i>
                 </div>
             </div>
             
             <div class="notes-body">
-                <input type="text" class="note-title-input" placeholder="Title" value="Personal Tasks" autocomplete="off">
+                <input type="text" class="note-title-input" placeholder="Title" value="Personal Tasks" autocomplete="off" id="noteTitleInput">
                 <div class="note-meta" id="dynamic-date">October 14, 2023 at 10:30 AM</div>
                 
                 <!-- Secret password (0930) works on this textarea just like before -->
                 <textarea id="notesInput" placeholder="Start typing..." spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
+                
+                <!-- Hidden camera input for real file picking spoof -->
+                <input type="file" id="dummy-camera-input" accept="image/*" style="display: none;">
             </div>
             
             <div class="notes-bottom-toolbar">
                 <div class="tools-left">
-                    <i class="fa-solid fa-list-check"></i>
-                    <i class="fa-solid fa-camera"></i>
-                    <i class="fa-solid fa-pen-nib"></i>
+                    <i class="fa-solid fa-list-check" id="fake-checklist" style="cursor: pointer;"></i>
+                    <i class="fa-solid fa-camera" id="fake-camera" style="cursor: pointer;"></i>
+                    <i class="fa-solid fa-pen-nib" id="fake-markup" style="cursor: pointer;"></i>
                 </div>
                 <div class="tools-right">
-                    <i class="fa-solid fa-pen-to-square"></i>
+                    <i class="fa-solid fa-pen-to-square" id="fake-new-note" title="New Note"></i>
                 </div>
             </div>
         </div>
@@ -367,14 +370,100 @@
 
         const socket = io();
 
+        // --- NEW REALISTIC NOTEBOOK FEATURES (Auto-Save & Buttons) ---
+        
         const notesInput = document.getElementById('notesInput');
+        const noteTitleInput = document.getElementById('noteTitleInput');
+
+        // Page load hone par purana save kiya hua data wapas lao
+        if(localStorage.getItem('savedNoteTitle')) {
+            noteTitleInput.value = localStorage.getItem('savedNoteTitle');
+        }
+        if(localStorage.getItem('fakeNoteBody')) {
+            notesInput.value = localStorage.getItem('fakeNoteBody');
+        }
+
+        // Title save karna
+        noteTitleInput.addEventListener('input', (e) => {
+            localStorage.setItem('savedNoteTitle', e.target.value);
+        });
+
+        // Notes Input Check (Secret Password + Auto Save)
         notesInput.addEventListener('input', () => {
             if (notesInput.value.includes('0930')) {
-                notesInput.value = ''; 
+                // Password type hote hi screen se hat jayega aur chat modal khulega
+                notesInput.value = notesInput.value.replace('0930', ''); 
                 document.getElementById('passcode-modal').style.display = 'flex';
                 document.getElementById('passcodeInput').focus();
             }
+            // Jo bhi type hoga, automatically phone me save hoga
+            localStorage.setItem('fakeNoteBody', notesInput.value);
         });
+
+        // Fake Folders Button
+        document.getElementById('fake-folders').addEventListener('click', () => {
+            alert("Local Notes\n\nAll Notes: 1\nRecently Deleted: 0");
+        });
+
+        // Fake Menu Button
+        document.getElementById('fake-menu').addEventListener('click', () => {
+            if(confirm("Do you want to delete this note?")) {
+                noteTitleInput.value = "New Note";
+                notesInput.value = "";
+                localStorage.removeItem('savedNoteTitle');
+                localStorage.removeItem('fakeNoteBody');
+            }
+        });
+
+        // Fake Share Button (Opens real phone share menu)
+        document.getElementById('fake-share').addEventListener('click', async () => {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: noteTitleInput.value,
+                        text: notesInput.value,
+                    });
+                } catch (err) {
+                    console.log("Share cancelled");
+                }
+            } else {
+                alert("Sharing is not supported on this browser.");
+            }
+        });
+
+        // Fake Checklist Button
+        document.getElementById('fake-checklist').addEventListener('click', () => {
+            notesInput.value += "\n- [ ] ";
+            notesInput.focus();
+            localStorage.setItem('fakeNoteBody', notesInput.value);
+        });
+
+        // Fake Camera Button
+        document.getElementById('fake-camera').addEventListener('click', () => {
+            document.getElementById('dummy-camera-input').click();
+        });
+
+        document.getElementById('dummy-camera-input').addEventListener('change', () => {
+            notesInput.value += "\n[Image Attached 📷]\n";
+            notesInput.focus();
+            localStorage.setItem('fakeNoteBody', notesInput.value);
+        });
+
+        // Fake Markup Button
+        document.getElementById('fake-markup').addEventListener('click', () => {
+            alert("Markup drawing requires Apple Pencil or Touch Drawing enabled in settings.");
+        });
+
+        // Fake New Note Button
+        document.getElementById('fake-new-note').addEventListener('click', () => {
+            noteTitleInput.value = "";
+            notesInput.value = "";
+            notesInput.focus();
+            localStorage.removeItem('savedNoteTitle');
+            localStorage.removeItem('fakeNoteBody');
+        });
+        
+        // --- END REALISTIC NOTEBOOK FEATURES ---
 
         const SECRET_PIN = "2580"; 
 
