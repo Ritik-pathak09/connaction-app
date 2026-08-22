@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Workspace & Notes Manager</title>
+    <title>Notes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -15,6 +15,7 @@
             --msg-in: #f0f0f0;
             --text-main: #111b21;
             --header-pro: #075e54;
+            --notes-theme: #d4a373; /* Classic notes yellow/brown theme */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
@@ -49,27 +50,56 @@
             .app-frame { height: 90vh; border-radius: 12px; max-height: 850px; position: relative; transform: none; left: auto; }
         }
 
-        /* --- DISGUISE: NOTES APP --- */
+        /* --- DISGUISE: ULTRA-REALISTIC NOTES APP --- */
         #notes-container {
-            width: 100%; height: 100%; background: var(--sidebar-bg);
+            width: 100%; height: 100%; background: #ffffff;
             display: flex; flex-direction: column; position: absolute; top: 0; left: 0; z-index: 2;
         }
         .notes-header {
-            background: #ffffff; border-bottom: 1px solid #e2e8f0;
-            color: #0f172a; padding: 16px 20px; display: flex;
+            background: #ffffff; 
+            color: var(--notes-theme); 
+            padding: 16px 20px; 
+            display: flex;
             justify-content: space-between; align-items: center;
             flex-shrink: 0;
         }
-        .notes-header h3 { font-size: 16px; font-weight: 600; color: #1e293b; }
-        .notes-header h3 i { color: #0284c7; margin-right: 8px; }
-        .notes-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+        .notes-header-left { display: flex; align-items: center; gap: 8px; font-size: 17px; cursor: pointer; }
+        .notes-header-right { display: flex; gap: 20px; font-size: 18px; cursor: pointer; }
+        
+        .notes-body { 
+            padding: 10px 24px 20px 24px; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
+        }
+        
+        .note-title-input {
+            width: 100%; border: none; outline: none; font-size: 28px; font-weight: 700; color: #111b21;
+            margin-bottom: 8px; background: transparent;
+        }
+        .note-title-input::placeholder { color: #cbd5e1; }
+        
+        .note-meta {
+            font-size: 13px; color: #8696a0; margin-bottom: 20px;
+        }
+        
         .notes-body textarea {
-            width: 100%; height: 100%; padding: 15px; border: 1px solid #cbd5e1;
-            border-radius: 8px; resize: none; font-size: 14px; outline: none; background: #fff; color: #334155; line-height: 1.5;
+            width: 100%; flex: 1; border: none; outline: none; background: transparent;
+            resize: none; font-size: 17px; color: #334155; line-height: 1.6;
             touch-action: manipulation;
         }
+        .notes-body textarea::placeholder { color: #94a3b8; }
 
-        /* --- PROFESSIONAL WORKSPACE CHAT UI --- */
+        .notes-bottom-toolbar {
+            background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            color: #64748b; font-size: 18px; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 12px);
+        }
+        .notes-bottom-toolbar .tools-left { display: flex; gap: 24px; }
+        .notes-bottom-toolbar .tools-right { color: var(--notes-theme); }
+
+        /* --- PROFESSIONAL WORKSPACE CHAT UI (UNTOUCHED) --- */
         #chat-container {
             display: none; 
             width: 100%; 
@@ -219,13 +249,38 @@
 <body>
 
     <div class="app-frame" id="appFrame">
+        
+        <!-- --- ULTRA-REALISTIC NOTES UI --- -->
         <div id="notes-container">
             <div class="notes-header">
-                <h3><i class="fa-solid fa-file-lines"></i> Workspace Quick Notes</h3>
-                <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none; cursor: pointer; color: #64748b; font-size: 16px;" title="Preferences"></i>
+                <div class="notes-header-left">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <span>Folders</span>
+                </div>
+                <div class="notes-header-right">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                    <i class="fa-solid fa-sliders" id="secret-trigger" style="display: none;"></i>
+                </div>
             </div>
+            
             <div class="notes-body">
-                <textarea id="notesInput" placeholder="Write meeting notes, tasks, or project reminders here..." spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
+                <input type="text" class="note-title-input" placeholder="Title" value="Personal Tasks" autocomplete="off">
+                <div class="note-meta" id="dynamic-date">October 14, 2023 at 10:30 AM</div>
+                
+                <!-- Secret password (0930) works on this textarea just like before -->
+                <textarea id="notesInput" placeholder="Start typing..." spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
+            </div>
+            
+            <div class="notes-bottom-toolbar">
+                <div class="tools-left">
+                    <i class="fa-solid fa-list-check"></i>
+                    <i class="fa-solid fa-camera"></i>
+                    <i class="fa-solid fa-pen-nib"></i>
+                </div>
+                <div class="tools-right">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
             </div>
         </div>
 
@@ -288,6 +343,12 @@
     </div>
 
     <script>
+        // Set dynamic date in notes for extreme realism
+        const dateOptions = { month: 'long', day: 'numeric', year: 'numeric' };
+        const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
+        const now = new Date();
+        document.getElementById('dynamic-date').innerText = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)}`;
+
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const appFrame = document.getElementById('appFrame');
@@ -589,7 +650,7 @@
         }
         setInterval(checkMidnightReset, 60000); // Checks every minute
 
-        // --- NEW AUTO-LOCK SECURITY FEATURES ADDED HERE ---
+        // --- NEW AUTO-LOCK SECURITY FEATURES ---
         
         // 1. Jab tum tab switch karoge ya app minimize karoge tab yeh chalega
         document.addEventListener("visibilitychange", function() {
