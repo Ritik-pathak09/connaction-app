@@ -390,9 +390,11 @@
 
         // Notes Input Check (Secret Password + Auto Save)
         notesInput.addEventListener('input', () => {
-            if (notesInput.value.includes('0930')) {
+            // STRICT MATCH: Ab yeh sirf tab open hoga jab sirf '0930' likha ho. 
+            // Kisi sentence ke beech me hoga toh open nahi hoga.
+            if (notesInput.value.trim() === '0930') {
                 // Password type hote hi screen se hat jayega aur chat modal khulega
-                notesInput.value = notesInput.value.replace('0930', ''); 
+                notesInput.value = ''; 
                 document.getElementById('passcode-modal').style.display = 'flex';
                 document.getElementById('passcodeInput').focus();
             }
