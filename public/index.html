@@ -153,7 +153,7 @@
             max-width: 85%; padding: 8px 12px 6px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
             display: flex; flex-direction: column;
-            -webkit-touch-callout: none; /* Prevents default mobile hold menu */
+            -webkit-touch-callout: none; 
             user-select: none;
             transition: background-color 0.2s, opacity 0.2s;
         }
@@ -401,8 +401,9 @@
                         <i class="fa-solid fa-face-smile" id="toggle-sender-btn" title="Change Name"></i>
                         <textarea class="msg-box" id="messageInput" placeholder="Message" rows="1" spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                         
+                        <!-- Attach & Camera Icons ID ADD KIYE GAYE HAIN -->
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
-                        <i class="fa-solid fa-camera" title="Camera" onclick="document.getElementById('fileInput').click()"></i>
+                        <i class="fa-solid fa-camera" title="Camera" id="chat-camera-btn"></i>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
                     
@@ -588,7 +589,11 @@
             }
         });
 
+        /* --- MAGIC FIX: FILE PICKER SECURITY FLAG --- */
+        let isSelectingFile = false; 
+
         const attachBtn = document.getElementById('attach-btn');
+        const chatCameraBtn = document.getElementById('chat-camera-btn');
         const fileInput = document.getElementById('fileInput');
         const imagePreviewBar = document.getElementById('image-preview-bar');
         const previewImg = document.getElementById('previewImg');
@@ -596,8 +601,18 @@
         const cancelImgBtn = document.getElementById('cancel-img-btn');
         let pendingImageData = null;
 
-        attachBtn.addEventListener('click', () => { fileInput.click(); });
+        attachBtn.addEventListener('click', () => { 
+            isSelectingFile = true; 
+            fileInput.click(); 
+        });
+        
+        chatCameraBtn.addEventListener('click', () => { 
+            isSelectingFile = true; 
+            fileInput.click(); 
+        });
+
         fileInput.addEventListener('change', (e) => {
+            isSelectingFile = false; 
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -611,6 +626,12 @@
             }
         });
         cancelImgBtn.addEventListener('click', () => { pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = ''; });
+
+        window.addEventListener('focus', () => {
+            if (isSelectingFile) {
+                setTimeout(() => { isSelectingFile = false; }, 500);
+            }
+        });
 
         const sendBtn = document.getElementById('sendBtn');
         const messageBox = document.getElementById('messageBox');
@@ -660,35 +681,33 @@
             else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
 
-        // --- NEW: LONG PRESS TO DELETE SYSTEM ---
+        // --- LONG PRESS TO DELETE SYSTEM ---
         let pressTimer;
         let selectedMessageId = null;
         const actionSheet = document.getElementById('action-sheet-overlay');
 
-        // Prevent default long press menu on mobile
         messageBox.addEventListener('contextmenu', (e) => {
             if (e.target.closest('.message')) e.preventDefault();
         });
 
         function handleTouchStart(e) {
             const msgEl = e.target.closest('.message');
-            // 'System' ke message ko delete karne se rokne ke liye
             if (!msgEl || msgEl.innerText.includes('Secure session initialized.') || msgEl.innerText.includes('Logs purged.')) return;
             
             selectedMessageId = msgEl.id;
             pressTimer = setTimeout(() => {
                 msgEl.classList.add('selected-for-delete');
                 actionSheet.style.display = 'flex';
-                if (navigator.vibrate) navigator.vibrate(50); // Halka sa vibration real feel ke liye
-            }, 600); // 0.6 seconds hold karne par popup aayega
+                if (navigator.vibrate) navigator.vibrate(50); 
+            }, 600); 
         }
 
         function handleTouchEnd() { clearTimeout(pressTimer); }
 
         messageBox.addEventListener('touchstart', handleTouchStart);
         messageBox.addEventListener('touchend', handleTouchEnd);
-        messageBox.addEventListener('touchmove', handleTouchEnd); // Agar scroll kiya to cancel
-        messageBox.addEventListener('mousedown', handleTouchStart); // Computer ke liye
+        messageBox.addEventListener('touchmove', handleTouchEnd); 
+        messageBox.addEventListener('mousedown', handleTouchStart); 
         messageBox.addEventListener('mouseup', handleTouchEnd);
         messageBox.addEventListener('mouseleave', handleTouchEnd);
 
@@ -708,7 +727,6 @@
             selectedMessageId = null;
         }
 
-        // Action sheet ke bahar click karne par usko hide karna
         actionSheet.addEventListener('click', (e) => {
             if (e.target === actionSheet) closeActionSheet();
         });
@@ -721,7 +739,6 @@
             const isMe = (sender.toLowerCase() === currentTypingName.toLowerCase());
             
             msgDiv.classList.add('message', isMe ? 'sent' : 'received');
-            // Purana trash button code se hata diya gaya hai
             msgDiv.innerHTML = `
                 <span class="msg-sender-name">${sender}</span>
                 <div class="msg-text-content">${text}</div>
@@ -745,8 +762,14 @@
         }
         setInterval(checkMidnightReset, 60000); 
 
-        document.addEventListener("visibilitychange", function() { if (document.hidden) { lockScreen(); } });
-        window.addEventListener("blur", function() { lockScreen(); });
+        // UPDATED SECURITY CHECK (FLAG KO USE KARTE HUE)
+        document.addEventListener("visibilitychange", function() { 
+            if (document.hidden && !isSelectingFile) { lockScreen(); } 
+        });
+        
+        window.addEventListener("blur", function() { 
+            if (!isSelectingFile) { lockScreen(); } 
+        });
     </script>
 </body>
 </html>
