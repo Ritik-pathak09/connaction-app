@@ -187,16 +187,18 @@
         #image-preview-bar span { font-size: 13px; color: #111b21; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; min-width: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
-        /* --- WHATSAPP STYLE INPUT BAR CSS CHANGES (FIXED FOR SMARTPHONE) --- */
+        /* --- WHATSAPP STYLE INPUT BAR CSS CHANGES (100% FIXED FOR SMARTPHONE) --- */
         .chat-input-container { 
             background: transparent; 
             display: flex; 
             flex-direction: column; 
             width: 100%; 
+            max-width: 100vw; 
             z-index: 5; 
             position: relative; 
             flex-shrink: 0; 
-            padding-bottom: 5px; 
+            padding-bottom: 8px; /* Bottom se thoda space */
+            box-sizing: border-box;
         }
         
         .sender-bar {
@@ -210,12 +212,13 @@
         }
 
         .chat-input-area {
-            padding: 5px; 
+            padding: 0 8px; /* Dono side edges se thoda padding */
             display: flex; 
             align-items: flex-end; 
             width: 100%; 
             background: transparent;
-            box-sizing: border-box; /* Mobile par width fixed rakhega */
+            box-sizing: border-box; 
+            gap: 8px; /* Mic aur input box ke beech perfect margin/gap */
         }
 
         .wa-input-wrapper {
@@ -224,34 +227,40 @@
             background-color: #ffffff; 
             border-radius: 24px;
             padding: 4px 5px; 
-            flex: 1; /* Pura space lega bina button ko dabaye */
+            flex: 1 1 auto; 
+            min-width: 0; /* MAGIC FIX: Textbox ab limit me rahega */
             box-shadow: 0 1px 1px rgba(0,0,0,0.1);
             min-height: 48px;
+            box-sizing: border-box;
         }
         
         .wa-input-wrapper i {
-            color: #8696a0; font-size: 24px; padding: 10px 8px; cursor: pointer;
+            color: #8696a0; font-size: 22px; padding: 12px 8px; cursor: pointer; flex-shrink: 0;
         }
         
         .chat-input-area textarea.msg-box {
-            flex: 1; background: transparent; border: none; padding: 12px 5px; border-radius: 0;
-            outline: none; font-size: 16px; color: #111b21; min-width: 0; -webkit-appearance: none;
+            flex: 1 1 auto; 
+            background: transparent; border: none; padding: 12px 5px; border-radius: 0;
+            outline: none; font-size: 16px; color: #111b21; 
+            min-width: 0; /* MAGIC FIX: Jisse container failta nahi hai */
+            width: 100%;
+            -webkit-appearance: none;
             resize: none; height: 44px; line-height: 20px; overflow-y: auto; font-family: inherit; margin: 0;
+            box-sizing: border-box;
         }
         .chat-input-area textarea.msg-box::placeholder { color: #8696a0; font-size: 16px; }
 
         .action-buttons-wrapper {
             display: flex;
-            flex-shrink: 0; /* YEH SABSE ZARURI HAI: Audio button ko katne nahi dega */
+            flex-shrink: 0; /* Button ko chota hone se rokta hai */
             align-items: flex-end;
-            margin-left: 5px;
         }
         
         .action-buttons-wrapper button, #mic-btn {
             background: #00a884; border: none; color: white; width: 48px; height: 48px; min-width: 48px;
             border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 0; transition: transform 0.2s;
-            flex-shrink: 0; /* Button 100% gol rahega */
+            flex-shrink: 0; /* Ekdum gol rakhega */
         }
         
         #mic-btn.recording { background: #ef4444; animation: pulse 1s infinite; }
