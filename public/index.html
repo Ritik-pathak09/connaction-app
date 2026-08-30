@@ -22,23 +22,23 @@
         html, body {
             width: 100%;
             height: 100%;
-            height: 100dvh; /* Mobile par keyboard aane par screen fix rakhega */
+            height: 100dvh; 
             background-color: #cbd5e1;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden !important; /* Pura page lock */
+            overflow: hidden !important; 
             position: fixed;
             inset: 0;
             touch-action: none;
-            overscroll-behavior: none !important; /* SCREEN KO KICHNE (BOUNCE) SE PERMANENT ROKEGA */
+            overscroll-behavior: none !important; 
         }
 
         .app-frame {
             width: 100%;
             max-width: 480px;
             height: 100%;
-            height: 100dvh; /* Mobile fix */
+            height: 100dvh; 
             background: #fff;
             position: absolute;
             top: 0;
@@ -76,7 +76,7 @@
             display: flex; 
             flex-direction: column; 
             overflow-y: auto; 
-            overscroll-behavior: contain; /* Scroll lock for notes */
+            overscroll-behavior: contain; 
         }
         
         .note-title-input {
@@ -146,17 +146,26 @@
             background-size: 20px 20px;
             -webkit-overflow-scrolling: touch;
             min-height: 0;
-            overscroll-behavior: contain; /* Chat container ko lock rakhega */
+            overscroll-behavior: contain; 
             touch-action: pan-y;
         }
         .message {
             max-width: 85%; padding: 8px 12px 6px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
             display: flex; flex-direction: column;
+            -webkit-touch-callout: none; /* Prevents default mobile hold menu */
+            user-select: none;
+            transition: background-color 0.2s, opacity 0.2s;
         }
         .message.sent { background: var(--msg-out); align-self: flex-end; border-top-right-radius: 0; }
         .message.received { background: var(--msg-in); align-self: flex-start; border-top-left-radius: 0; }
         
+        /* Highlight message when long pressed */
+        .message.selected-for-delete {
+            opacity: 0.7;
+            filter: brightness(0.9);
+        }
+
         .msg-sender-name { font-size: 11px; font-weight: bold; color: #008069; margin-bottom: 3px; display: block; }
         .message.sent .msg-sender-name { color: #005c4b; }
 
@@ -177,9 +186,6 @@
             white-space: nowrap;
             line-height: 1;
         }
-        .delete-msg-btn { font-size: 11px; color: #667781; cursor: pointer; display: none; background: none; border: none; padding: 0; }
-        .message:hover .delete-msg-btn { display: inline-block; }
-        .delete-msg-btn:hover { color: #ef4444; }
 
         .message audio { width: 100%; max-width: 200px; height: 35px; margin-top: 5px; }
         .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; }
@@ -273,6 +279,29 @@
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
+        /* --- DELETE ACTION SHEET (PROFESSIONAL POPUP) --- */
+        #action-sheet-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); justify-content: center; align-items: flex-end; 
+            z-index: 200; padding-bottom: 25px;
+        }
+        .action-sheet {
+            width: 92%; max-width: 380px; display: flex; flex-direction: column; gap: 8px;
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .action-sheet-btn {
+            background: #ffffff; border: none; padding: 18px; width: 100%; font-size: 17px; 
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .action-sheet-delete {
+            color: #ff3b30; border-radius: 14px; font-weight: 600;
+        }
+        .action-sheet-cancel {
+            color: #007aff; border-radius: 14px; font-weight: bold;
+        }
+        .action-sheet-btn:active { background: #f0f0f0; }
+        @keyframes slideUp { from { transform: translateY(150%); } to { transform: translateY(0); } }
+
         /* --- PASSCODE MODAL --- */
         #passcode-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -318,10 +347,7 @@
                 <input type="text" class="note-title-input" placeholder="Title" value="Personal Tasks" autocomplete="off" id="noteTitleInput">
                 <div class="note-meta" id="dynamic-date">October 14, 2023 at 10:30 AM</div>
                 
-                <!-- Secret password (0930) works on this textarea just like before -->
                 <textarea id="notesInput" placeholder="Start typing..." spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
-                
-                <!-- Hidden camera input for real file picking spoof -->
                 <input type="file" id="dummy-camera-input" accept="image/*" style="display: none;">
             </div>
             
@@ -361,7 +387,7 @@
                 <button id="cancel-img-btn" title="Cancel Image"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- --- WHATSAPP STYLE HTML CHANGES (FIXED) --- -->
+            <!-- --- WHATSAPP STYLE INPUT BAR --- -->
             <div class="chat-input-container">
                 <div class="sender-bar">
                     <div class="sender-left">
@@ -372,20 +398,14 @@
 
                 <div class="chat-input-area">
                     <div class="wa-input-wrapper">
-                        <!-- Left icon (Smiley instead of Gear to match WhatsApp) -->
                         <i class="fa-solid fa-face-smile" id="toggle-sender-btn" title="Change Name"></i>
-                        
                         <textarea class="msg-box" id="messageInput" placeholder="Message" rows="1" spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                         
-                        <!-- Attachment Icon -->
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
-                        <!-- Dummy Camera Icon -->
                         <i class="fa-solid fa-camera" title="Camera" onclick="document.getElementById('fileInput').click()"></i>
-                        
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
                     
-                    <!-- Buttons Container (Fixed flex shrink issue) -->
                     <div class="action-buttons-wrapper">
                         <div id="mic-btn" title="Click to Record Voice Note">
                             <i class="fa-solid fa-microphone"></i>
@@ -397,6 +417,15 @@
         </div>
     </div>
 
+    <!-- Delete Action Sheet Popup -->
+    <div id="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-btn action-sheet-delete" id="confirm-delete-btn">Delete Message</button>
+            <button class="action-sheet-btn action-sheet-cancel" id="cancel-delete-btn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Passcode Modal -->
     <div id="passcode-modal">
         <div class="modal-content">
             <h3>Security Verification</h3>
@@ -408,21 +437,26 @@
     </div>
 
     <script>
-        // Set dynamic date in notes for extreme realism
         const dateOptions = { month: 'long', day: 'numeric', year: 'numeric' };
         const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
         const now = new Date();
         document.getElementById('dynamic-date').innerText = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)}`;
 
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
+            const viewportHandler = () => {
                 const appFrame = document.getElementById('appFrame');
                 if (window.innerWidth <= 480) {
                     appFrame.style.height = window.visualViewport.height + 'px';
                     appFrame.style.top = window.visualViewport.offsetTop + 'px';
                 }
-            });
+            };
+            window.visualViewport.addEventListener('resize', viewportHandler);
+            window.visualViewport.addEventListener('scroll', viewportHandler); 
         }
+
+        window.addEventListener('scroll', () => {
+            if(window.scrollY > 0 || window.scrollX > 0) window.scrollTo(0, 0);
+        });
 
         document.addEventListener('touchmove', function(e) {
             if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput')) {
@@ -431,18 +465,12 @@
         }, { passive: false });
 
         const socket = io();
-
-        // --- NEW REALISTIC NOTEBOOK FEATURES (Auto-Save & Buttons) ---
         
         const notesInput = document.getElementById('notesInput');
         const noteTitleInput = document.getElementById('noteTitleInput');
 
-        if(localStorage.getItem('savedNoteTitle')) {
-            noteTitleInput.value = localStorage.getItem('savedNoteTitle');
-        }
-        if(localStorage.getItem('fakeNoteBody')) {
-            notesInput.value = localStorage.getItem('fakeNoteBody');
-        }
+        if(localStorage.getItem('savedNoteTitle')) noteTitleInput.value = localStorage.getItem('savedNoteTitle');
+        if(localStorage.getItem('fakeNoteBody')) notesInput.value = localStorage.getItem('fakeNoteBody');
 
         noteTitleInput.addEventListener('input', (e) => {
             localStorage.setItem('savedNoteTitle', e.target.value);
@@ -457,66 +485,32 @@
             localStorage.setItem('fakeNoteBody', notesInput.value);
         });
 
-        document.getElementById('fake-folders').addEventListener('click', () => {
-            alert("Local Notes\n\nAll Notes: 1\nRecently Deleted: 0");
-        });
-
+        document.getElementById('fake-folders').addEventListener('click', () => { alert("Local Notes\n\nAll Notes: 1\nRecently Deleted: 0"); });
         document.getElementById('fake-menu').addEventListener('click', () => {
             if(confirm("Do you want to delete this note?")) {
-                noteTitleInput.value = "New Note";
-                notesInput.value = "";
-                localStorage.removeItem('savedNoteTitle');
-                localStorage.removeItem('fakeNoteBody');
+                noteTitleInput.value = "New Note"; notesInput.value = "";
+                localStorage.removeItem('savedNoteTitle'); localStorage.removeItem('fakeNoteBody');
             }
         });
-
         document.getElementById('fake-share').addEventListener('click', async () => {
             if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: noteTitleInput.value,
-                        text: notesInput.value,
-                    });
-                } catch (err) {
-                    console.log("Share cancelled");
-                }
-            } else {
-                alert("Sharing is not supported on this browser.");
-            }
+                try { await navigator.share({ title: noteTitleInput.value, text: notesInput.value }); } catch (err) {}
+            } else { alert("Sharing is not supported on this browser."); }
         });
-
         document.getElementById('fake-checklist').addEventListener('click', () => {
-            notesInput.value += "\n- [ ] ";
-            notesInput.focus();
-            localStorage.setItem('fakeNoteBody', notesInput.value);
+            notesInput.value += "\n- [ ] "; notesInput.focus(); localStorage.setItem('fakeNoteBody', notesInput.value);
         });
-
-        document.getElementById('fake-camera').addEventListener('click', () => {
-            document.getElementById('dummy-camera-input').click();
-        });
-
+        document.getElementById('fake-camera').addEventListener('click', () => { document.getElementById('dummy-camera-input').click(); });
         document.getElementById('dummy-camera-input').addEventListener('change', () => {
-            notesInput.value += "\n[Image Attached 📷]\n";
-            notesInput.focus();
-            localStorage.setItem('fakeNoteBody', notesInput.value);
+            notesInput.value += "\n[Image Attached 📷]\n"; notesInput.focus(); localStorage.setItem('fakeNoteBody', notesInput.value);
         });
-
-        document.getElementById('fake-markup').addEventListener('click', () => {
-            alert("Markup drawing requires Apple Pencil or Touch Drawing enabled in settings.");
-        });
-
+        document.getElementById('fake-markup').addEventListener('click', () => { alert("Markup drawing requires Apple Pencil or Touch Drawing enabled in settings."); });
         document.getElementById('fake-new-note').addEventListener('click', () => {
-            noteTitleInput.value = "";
-            notesInput.value = "";
-            notesInput.focus();
-            localStorage.removeItem('savedNoteTitle');
-            localStorage.removeItem('fakeNoteBody');
+            noteTitleInput.value = ""; notesInput.value = ""; notesInput.focus();
+            localStorage.removeItem('savedNoteTitle'); localStorage.removeItem('fakeNoteBody');
         });
         
-        // --- END REALISTIC NOTEBOOK FEATURES ---
-
         const SECRET_PIN = "2580"; 
-
         function handleAccess() {
             const enteredPin = document.getElementById('passcodeInput').value;
             if (enteredPin === SECRET_PIN) {
@@ -526,68 +520,39 @@
                 scrollToBottom();
             } else {
                 const btn = document.querySelector('#verifyPin');
-                btn.innerText = "Access Denied";
-                btn.style.background = "#ef4444";
-                setTimeout(() => {
-                    btn.innerText = "Authorize";
-                    btn.style.background = "#0f172a";
-                    document.getElementById('passcodeInput').value = '';
-                }, 1000);
+                btn.innerText = "Access Denied"; btn.style.background = "#ef4444";
+                setTimeout(() => { btn.innerText = "Authorize"; btn.style.background = "#0f172a"; document.getElementById('passcodeInput').value = ''; }, 1000);
             }
         }
-
         document.getElementById('verifyPin').addEventListener('click', handleAccess);
-        document.getElementById('passcodeInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleAccess();
-        });
-
+        document.getElementById('passcodeInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAccess(); });
+        
         function lockScreen() {
             document.getElementById('chat-container').style.display = 'none';
             document.getElementById('passcodeInput').value = '';
             document.querySelector('.sender-bar').style.display = 'none'; 
         }
-
-        document.getElementById('back-to-notes').addEventListener('click', () => {
-            lockScreen();
-            if(history.state && history.state.chatOpen) history.back();
-        });
-
-        document.getElementById('panic-lock').addEventListener('click', () => {
-            lockScreen();
-            if(history.state && history.state.chatOpen) history.back();
-        });
-
+        document.getElementById('back-to-notes').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
+        document.getElementById('panic-lock').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
         window.addEventListener('popstate', () => { lockScreen(); });
 
-        /* --- SENDER NAME TOGGLE LOGIC --- */
         const toggleSenderBtn = document.getElementById('toggle-sender-btn');
         const senderBar = document.querySelector('.sender-bar');
-
         toggleSenderBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (senderBar.style.display === 'flex') {
-                senderBar.style.display = 'none';
-            } else {
-                senderBar.style.display = 'flex';
-                document.getElementById('activeSenderName').focus();
-            }
+            if (senderBar.style.display === 'flex') { senderBar.style.display = 'none'; } 
+            else { senderBar.style.display = 'flex'; document.getElementById('activeSenderName').focus(); }
         });
-
         document.addEventListener('click', (e) => {
-            if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) {
-                senderBar.style.display = 'none';
-            }
+            if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) { senderBar.style.display = 'none'; }
         });
 
         const messageInput = document.getElementById('messageInput');
-
-        // Auto-expand textarea & Toggle Mic/Send buttons exactly like WhatsApp
         messageInput.addEventListener('input', function() {
-            this.style.height = '44px'; // Reset height
-            const newHeight = Math.min(this.scrollHeight, 100); // Max height 100px
+            this.style.height = '44px'; 
+            const newHeight = Math.min(this.scrollHeight, 100); 
             this.style.height = newHeight + 'px';
             
-            // Toggle Mic / Send Button Logic
             if(this.value.trim() !== '') {
                 document.getElementById('mic-btn').style.display = 'none';
                 document.getElementById('sendBtn').style.display = 'flex';
@@ -597,26 +562,17 @@
             }
         });
 
-        let mediaRecorder;
-        let audioChunks = [];
-        const micBtn = document.getElementById('mic-btn');
-
+        let mediaRecorder; let audioChunks = []; const micBtn = document.getElementById('mic-btn');
         micBtn.addEventListener('click', async () => {
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-
-                    mediaRecorder.ondataavailable = event => {
-                        audioChunks.push(event.data);
-                    };
-
+                    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+                    mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
                     mediaRecorder.onstop = () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader();
-                        reader.readAsDataURL(audioBlob);
+                        const reader = new FileReader(); reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
                             const base64Audio = reader.result;
                             const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -625,17 +581,10 @@
                             socket.emit('send_message', { id: msgId, sender: senderName, text: audioHTML, time: timeStr });
                         };
                     };
-
-                    mediaRecorder.start();
-                    micBtn.classList.add('recording');
-                    micBtn.title = "Recording... Click to Stop";
-                } catch (err) {
-                    alert("Microphone permission denied or not available!");
-                }
+                    mediaRecorder.start(); micBtn.classList.add('recording'); micBtn.title = "Recording... Click to Stop";
+                } catch (err) { alert("Microphone permission denied or not available!"); }
             } else if (mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                micBtn.classList.remove('recording');
-                micBtn.title = "Click to Record Voice Note";
+                mediaRecorder.stop(); micBtn.classList.remove('recording'); micBtn.title = "Click to Record Voice Note";
             }
         });
 
@@ -645,39 +594,23 @@
         const previewImg = document.getElementById('previewImg');
         const previewFileName = document.getElementById('previewFileName');
         const cancelImgBtn = document.getElementById('cancel-img-btn');
-
         let pendingImageData = null;
 
         attachBtn.addEventListener('click', () => { fileInput.click(); });
-
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(uploadEvent) {
-                    pendingImageData = {
-                        type: file.type,
-                        name: file.name,
-                        data: uploadEvent.target.result
-                    };
-                    if (file.type.startsWith('image/')) {
-                        previewImg.src = uploadEvent.target.result;
-                        previewImg.style.display = 'block';
-                    } else {
-                        previewImg.style.display = 'none';
-                    }
-                    previewFileName.innerText = file.name;
-                    imagePreviewBar.style.display = 'flex';
+                    pendingImageData = { type: file.type, name: file.name, data: uploadEvent.target.result };
+                    if (file.type.startsWith('image/')) { previewImg.src = uploadEvent.target.result; previewImg.style.display = 'block'; } 
+                    else { previewImg.style.display = 'none'; }
+                    previewFileName.innerText = file.name; imagePreviewBar.style.display = 'flex';
                 };
                 reader.readAsDataURL(file);
             }
         });
-
-        cancelImgBtn.addEventListener('click', () => {
-            pendingImageData = null;
-            imagePreviewBar.style.display = 'none';
-            fileInput.value = '';
-        });
+        cancelImgBtn.addEventListener('click', () => { pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = ''; });
 
         const sendBtn = document.getElementById('sendBtn');
         const messageBox = document.getElementById('messageBox');
@@ -688,25 +621,13 @@
                 messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Secure session initialized.<div class="msg-footer"><span class="time">Just now</span></div></div>`;
                 return;
             }
-            history.forEach(msg => {
-                appendMessageUI(msg.id, msg.sender, msg.text, msg.time);
-            });
+            history.forEach(msg => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time); });
             scrollToBottom();
         });
 
-        socket.on('receive_message', (msg) => {
-            appendMessageUI(msg.id, msg.sender, msg.text, msg.time);
-            scrollToBottom();
-        });
-
-        socket.on('delete_message', (msgId) => {
-            const element = document.getElementById(msgId);
-            if (element) element.remove();
-        });
-
-        socket.on('history_cleared', () => {
-            messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`;
-        });
+        socket.on('receive_message', (msg) => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time); scrollToBottom(); });
+        socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); });
+        socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; });
 
         function sendMessage() {
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
@@ -714,17 +635,12 @@
             
             if (pendingImageData) {
                 let contentHTML = "";
-                if (pendingImageData.type.startsWith('image/')) {
-                    contentHTML = `<img src="${pendingImageData.data}" alt="Attachment">`;
-                } else {
-                    contentHTML = `<i class="fa-solid fa-file-lines"></i> ${pendingImageData.name} (Attached)`;
-                }
+                if (pendingImageData.type.startsWith('image/')) { contentHTML = `<img src="${pendingImageData.data}" alt="Attachment">`; } 
+                else { contentHTML = `<i class="fa-solid fa-file-lines"></i> ${pendingImageData.name} (Attached)`; }
                 const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                 socket.emit('send_message', { id: imgMsgId, sender: senderName, text: contentHTML, time: timeStr });
                 
-                pendingImageData = null;
-                imagePreviewBar.style.display = 'none';
-                fileInput.value = '';
+                pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = '';
             }
 
             const text = messageInput.value.trim();
@@ -732,30 +648,71 @@
                 const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                 socket.emit('send_message', { id: textMsgId, sender: senderName, text: text, time: timeStr });
                 
-                messageInput.value = '';
-                messageInput.style.height = '44px'; // Reset height after sending
-                
-                // Reset buttons state to Mic
-                document.getElementById('mic-btn').style.display = 'flex';
-                document.getElementById('sendBtn').style.display = 'none';
+                messageInput.value = ''; messageInput.style.height = '44px'; 
+                document.getElementById('mic-btn').style.display = 'flex'; document.getElementById('sendBtn').style.display = 'none';
             }
-
             messageInput.focus();
         }
 
-        sendBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            sendMessage();
+        sendBtn.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { /* native newline */ } 
+            else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
 
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                // Do nothing, let the newline happen naturally in the textarea
-            } else if (e.key === 'Enter' && e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+        // --- NEW: LONG PRESS TO DELETE SYSTEM ---
+        let pressTimer;
+        let selectedMessageId = null;
+        const actionSheet = document.getElementById('action-sheet-overlay');
+
+        // Prevent default long press menu on mobile
+        messageBox.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.message')) e.preventDefault();
         });
+
+        function handleTouchStart(e) {
+            const msgEl = e.target.closest('.message');
+            // 'System' ke message ko delete karne se rokne ke liye
+            if (!msgEl || msgEl.innerText.includes('Secure session initialized.') || msgEl.innerText.includes('Logs purged.')) return;
+            
+            selectedMessageId = msgEl.id;
+            pressTimer = setTimeout(() => {
+                msgEl.classList.add('selected-for-delete');
+                actionSheet.style.display = 'flex';
+                if (navigator.vibrate) navigator.vibrate(50); // Halka sa vibration real feel ke liye
+            }, 600); // 0.6 seconds hold karne par popup aayega
+        }
+
+        function handleTouchEnd() { clearTimeout(pressTimer); }
+
+        messageBox.addEventListener('touchstart', handleTouchStart);
+        messageBox.addEventListener('touchend', handleTouchEnd);
+        messageBox.addEventListener('touchmove', handleTouchEnd); // Agar scroll kiya to cancel
+        messageBox.addEventListener('mousedown', handleTouchStart); // Computer ke liye
+        messageBox.addEventListener('mouseup', handleTouchEnd);
+        messageBox.addEventListener('mouseleave', handleTouchEnd);
+
+        document.getElementById('cancel-delete-btn').addEventListener('click', closeActionSheet);
+        
+        document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+            if (selectedMessageId) deleteMessage(selectedMessageId);
+            closeActionSheet();
+        });
+
+        function closeActionSheet() {
+            actionSheet.style.display = 'none';
+            if (selectedMessageId) {
+                const el = document.getElementById(selectedMessageId);
+                if (el) el.classList.remove('selected-for-delete');
+            }
+            selectedMessageId = null;
+        }
+
+        // Action sheet ke bahar click karne par usko hide karna
+        actionSheet.addEventListener('click', (e) => {
+            if (e.target === actionSheet) closeActionSheet();
+        });
+        // --- END LONG PRESS SYSTEM ---
 
         function appendMessageUI(id, sender, text, time) {
             const msgDiv = document.createElement('div');
@@ -764,54 +721,32 @@
             const isMe = (sender.toLowerCase() === currentTypingName.toLowerCase());
             
             msgDiv.classList.add('message', isMe ? 'sent' : 'received');
+            // Purana trash button code se hata diya gaya hai
             msgDiv.innerHTML = `
                 <span class="msg-sender-name">${sender}</span>
                 <div class="msg-text-content">${text}</div>
                 <div class="msg-footer">
-                    <button class="delete-msg-btn" onclick="deleteMessage('${id}')" title="Delete message"><i class="fa-solid fa-trash"></i></button>
                     <span class="time">${time}</span>
                 </div>
             `;
             messageBox.appendChild(msgDiv);
         }
 
-        function deleteMessage(msgId) {
-            if (msgId) {
-                socket.emit('delete_message', msgId);
-            }
-        }
-
-        function scrollToBottom() {
-            messageBox.scrollTop = messageBox.scrollHeight;
-        }
-
+        function deleteMessage(msgId) { if (msgId) { socket.emit('delete_message', msgId); } }
+        function scrollToBottom() { messageBox.scrollTop = messageBox.scrollHeight; }
+        
         document.getElementById('clearDataBtn').addEventListener('click', () => {
-            if(confirm("Permanently purge all workspace logs?")) {
-                socket.emit('clear_history');
-                alert("Logs purged successfully.");
-            }
+            if(confirm("Permanently purge all workspace logs?")) { socket.emit('clear_history'); alert("Logs purged successfully."); }
         });
 
         function checkMidnightReset() {
             const now = new Date();
-            if (now.getHours() === 0 && now.getMinutes() === 0) {
-                socket.emit('clear_history');
-            }
+            if (now.getHours() === 0 && now.getMinutes() === 0) { socket.emit('clear_history'); }
         }
-        setInterval(checkMidnightReset, 60000); // Checks every minute
+        setInterval(checkMidnightReset, 60000); 
 
-        // --- NEW AUTO-LOCK SECURITY FEATURES ---
-        
-        document.addEventListener("visibilitychange", function() {
-            if (document.hidden) {
-                lockScreen();
-            }
-        });
-
-        window.addEventListener("blur", function() {
-            lockScreen();
-        });
-        
+        document.addEventListener("visibilitychange", function() { if (document.hidden) { lockScreen(); } });
+        window.addEventListener("blur", function() { lockScreen(); });
     </script>
 </body>
 </html>
