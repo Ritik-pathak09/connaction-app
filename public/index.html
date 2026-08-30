@@ -188,7 +188,34 @@
         }
 
         .message audio { width: 100%; max-width: 200px; height: 35px; margin-top: 5px; }
-        .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; }
+        .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; display: block; }
+
+        /* --- NEW DOWNLOAD BUTTON STYLES --- */
+        .image-message-container {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .download-img-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            font-size: 15px;
+            backdrop-filter: blur(2px);
+            transition: background 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 2; /* Ensure it stays above image */
+        }
+        .download-img-btn:active { background: rgba(0, 0, 0, 0.8); }
 
         #image-preview-bar {
             display: none; padding: 8px 14px; background: #f0f2f5; border-top: 1px solid #d1d7db;
@@ -198,7 +225,7 @@
         #image-preview-bar span { font-size: 13px; color: #111b21; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; min-width: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
-        /* --- WHATSAPP STYLE INPUT BAR CSS CHANGES --- */
+        /* --- WHATSAPP STYLE INPUT BAR --- */
         .chat-input-container { 
             background: transparent; 
             display: flex; 
@@ -401,7 +428,6 @@
                         <i class="fa-solid fa-face-smile" id="toggle-sender-btn" title="Change Name"></i>
                         <textarea class="msg-box" id="messageInput" placeholder="Message" rows="1" spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                         
-                        <!-- Attach & Camera Icons ID ADD KIYE GAYE HAIN -->
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
                         <i class="fa-solid fa-camera" title="Camera" id="chat-camera-btn"></i>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
@@ -418,7 +444,7 @@
         </div>
     </div>
 
-    <!-- Delete Action Sheet Popup -->
+    <!-- Action Sheet -->
     <div id="action-sheet-overlay">
         <div class="action-sheet">
             <button class="action-sheet-btn action-sheet-delete" id="confirm-delete-btn">Delete Message</button>
@@ -473,9 +499,7 @@
         if(localStorage.getItem('savedNoteTitle')) noteTitleInput.value = localStorage.getItem('savedNoteTitle');
         if(localStorage.getItem('fakeNoteBody')) notesInput.value = localStorage.getItem('fakeNoteBody');
 
-        noteTitleInput.addEventListener('input', (e) => {
-            localStorage.setItem('savedNoteTitle', e.target.value);
-        });
+        noteTitleInput.addEventListener('input', (e) => { localStorage.setItem('savedNoteTitle', e.target.value); });
 
         notesInput.addEventListener('input', () => {
             if (notesInput.value.trim() === '0930') {
@@ -554,7 +578,8 @@
             const newHeight = Math.min(this.scrollHeight, 100); 
             this.style.height = newHeight + 'px';
             
-            if(this.value.trim() !== '') {
+            // Image selected hai toh bhi Send button show hona chahiye
+            if(this.value.trim() !== '' || pendingImageData !== null) {
                 document.getElementById('mic-btn').style.display = 'none';
                 document.getElementById('sendBtn').style.display = 'flex';
             } else {
@@ -589,7 +614,6 @@
             }
         });
 
-        /* --- MAGIC FIX: FILE PICKER SECURITY FLAG --- */
         let isSelectingFile = false; 
 
         const attachBtn = document.getElementById('attach-btn');
@@ -601,15 +625,8 @@
         const cancelImgBtn = document.getElementById('cancel-img-btn');
         let pendingImageData = null;
 
-        attachBtn.addEventListener('click', () => { 
-            isSelectingFile = true; 
-            fileInput.click(); 
-        });
-        
-        chatCameraBtn.addEventListener('click', () => { 
-            isSelectingFile = true; 
-            fileInput.click(); 
-        });
+        attachBtn.addEventListener('click', () => { isSelectingFile = true; fileInput.click(); });
+        chatCameraBtn.addEventListener('click', () => { isSelectingFile = true; fileInput.click(); });
 
         fileInput.addEventListener('change', (e) => {
             isSelectingFile = false; 
@@ -620,17 +637,31 @@
                     pendingImageData = { type: file.type, name: file.name, data: uploadEvent.target.result };
                     if (file.type.startsWith('image/')) { previewImg.src = uploadEvent.target.result; previewImg.style.display = 'block'; } 
                     else { previewImg.style.display = 'none'; }
-                    previewFileName.innerText = file.name; imagePreviewBar.style.display = 'flex';
+                    previewFileName.innerText = file.name; 
+                    imagePreviewBar.style.display = 'flex';
+                    
+                    /* --- FIX 1: IMAGE SELECT HOTE HI SEND BUTTON DIKHAO --- */
+                    document.getElementById('mic-btn').style.display = 'none';
+                    document.getElementById('sendBtn').style.display = 'flex';
                 };
                 reader.readAsDataURL(file);
             }
         });
-        cancelImgBtn.addEventListener('click', () => { pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = ''; });
+
+        cancelImgBtn.addEventListener('click', () => { 
+            pendingImageData = null; 
+            imagePreviewBar.style.display = 'none'; 
+            fileInput.value = ''; 
+            
+            /* --- FIX 1: AGAR TEXT KHALI HAI TO WAPAS MIC BUTTON LAO --- */
+            if(document.getElementById('messageInput').value.trim() === '') {
+                document.getElementById('mic-btn').style.display = 'flex';
+                document.getElementById('sendBtn').style.display = 'none';
+            }
+        });
 
         window.addEventListener('focus', () => {
-            if (isSelectingFile) {
-                setTimeout(() => { isSelectingFile = false; }, 500);
-            }
+            if (isSelectingFile) { setTimeout(() => { isSelectingFile = false; }, 500); }
         });
 
         const sendBtn = document.getElementById('sendBtn');
@@ -656,12 +687,28 @@
             
             if (pendingImageData) {
                 let contentHTML = "";
-                if (pendingImageData.type.startsWith('image/')) { contentHTML = `<img src="${pendingImageData.data}" alt="Attachment">`; } 
+                if (pendingImageData.type.startsWith('image/')) { 
+                    /* --- FIX 2: IMAGE KE SATH DOWNLOAD BUTTON JOD DIYA --- */
+                    contentHTML = `
+                        <div class="image-message-container">
+                            <img src="${pendingImageData.data}" alt="Attachment">
+                            <a href="${pendingImageData.data}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        </div>`; 
+                } 
                 else { contentHTML = `<i class="fa-solid fa-file-lines"></i> ${pendingImageData.name} (Attached)`; }
+                
                 const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                 socket.emit('send_message', { id: imgMsgId, sender: senderName, text: contentHTML, time: timeStr });
                 
                 pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = '';
+                
+                /* --- FIX 1: PHOTO BHEJNE KE BAAD AGAR TEXT NA HO TOH WAPAS MIC LAO --- */
+                if(document.getElementById('messageInput').value.trim() === '') {
+                    document.getElementById('mic-btn').style.display = 'flex';
+                    document.getElementById('sendBtn').style.display = 'none';
+                }
             }
 
             const text = messageInput.value.trim();
@@ -687,10 +734,15 @@
         const actionSheet = document.getElementById('action-sheet-overlay');
 
         messageBox.addEventListener('contextmenu', (e) => {
+            // Agar download button pe right-click kiya hai toh roko mat
+            if (e.target.closest('.download-img-btn')) return;
             if (e.target.closest('.message')) e.preventDefault();
         });
 
         function handleTouchStart(e) {
+            // Download button ko touch karte waqt Delete menu na khule
+            if (e.target.closest('.download-img-btn')) return;
+
             const msgEl = e.target.closest('.message');
             if (!msgEl || msgEl.innerText.includes('Secure session initialized.') || msgEl.innerText.includes('Logs purged.')) return;
             
