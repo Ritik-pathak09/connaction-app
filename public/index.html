@@ -15,7 +15,7 @@
             --msg-in: #f0f0f0;
             --text-main: #111b21;
             --header-pro: #075e54;
-            --notes-theme: #d4a373; /* Classic notes yellow/brown theme */
+            --notes-theme: #d4a373;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
@@ -187,8 +187,17 @@
         #image-preview-bar span { font-size: 13px; color: #111b21; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; min-width: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
-        /* --- WHATSAPP STYLE INPUT BAR CSS CHANGES --- */
-        .chat-input-container { background: transparent; display: flex; flex-direction: column; width: 100%; z-index: 5; position: relative; flex-shrink: 0; padding-bottom: 5px; }
+        /* --- WHATSAPP STYLE INPUT BAR CSS CHANGES (FIXED FOR SMARTPHONE) --- */
+        .chat-input-container { 
+            background: transparent; 
+            display: flex; 
+            flex-direction: column; 
+            width: 100%; 
+            z-index: 5; 
+            position: relative; 
+            flex-shrink: 0; 
+            padding-bottom: 5px; 
+        }
         
         .sender-bar {
             display: none; 
@@ -201,12 +210,23 @@
         }
 
         .chat-input-area {
-            padding: 5px 10px; display: flex; align-items: flex-end; gap: 8px; position: relative; width: 100%; background: transparent;
+            padding: 5px; 
+            display: flex; 
+            align-items: flex-end; 
+            width: 100%; 
+            background: transparent;
+            box-sizing: border-box; /* Mobile par width fixed rakhega */
         }
 
         .wa-input-wrapper {
-            display: flex; align-items: flex-end; background-color: #ffffff; border-radius: 24px;
-            padding: 4px 5px; flex: 1; box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            display: flex; 
+            align-items: flex-end; 
+            background-color: #ffffff; 
+            border-radius: 24px;
+            padding: 4px 5px; 
+            flex: 1; /* Pura space lega bina button ko dabaye */
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            min-height: 48px;
         }
         
         .wa-input-wrapper i {
@@ -219,11 +239,19 @@
             resize: none; height: 44px; line-height: 20px; overflow-y: auto; font-family: inherit; margin: 0;
         }
         .chat-input-area textarea.msg-box::placeholder { color: #8696a0; font-size: 16px; }
+
+        .action-buttons-wrapper {
+            display: flex;
+            flex-shrink: 0; /* YEH SABSE ZARURI HAI: Audio button ko katne nahi dega */
+            align-items: flex-end;
+            margin-left: 5px;
+        }
         
-        .chat-input-area button, #mic-btn {
+        .action-buttons-wrapper button, #mic-btn {
             background: #00a884; border: none; color: white; width: 48px; height: 48px; min-width: 48px;
             border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 0; margin-bottom: 2px; transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 0; transition: transform 0.2s;
+            flex-shrink: 0; /* Button 100% gol rahega */
         }
         
         #mic-btn.recording { background: #ef4444; animation: pulse 1s infinite; }
@@ -319,7 +347,7 @@
                 <button id="cancel-img-btn" title="Cancel Image"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- --- WHATSAPP STYLE HTML CHANGES --- -->
+            <!-- --- WHATSAPP STYLE HTML CHANGES (FIXED) --- -->
             <div class="chat-input-container">
                 <div class="sender-bar">
                     <div class="sender-left">
@@ -330,21 +358,21 @@
 
                 <div class="chat-input-area">
                     <div class="wa-input-wrapper">
-                        <!-- Left icon (Smiley instead of Gear to match WhatsApp, but keeps JS function) -->
+                        <!-- Left icon (Smiley instead of Gear to match WhatsApp) -->
                         <i class="fa-solid fa-face-smile" id="toggle-sender-btn" title="Change Name"></i>
                         
                         <textarea class="msg-box" id="messageInput" placeholder="Message" rows="1" spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                         
                         <!-- Attachment Icon -->
                         <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
-                        <!-- Dummy Camera Icon (Just for aesthetics, triggers file select) -->
+                        <!-- Dummy Camera Icon -->
                         <i class="fa-solid fa-camera" title="Camera" onclick="document.getElementById('fileInput').click()"></i>
                         
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
                     </div>
                     
-                    <!-- Buttons Container -->
-                    <div style="display: flex; gap: 8px;">
+                    <!-- Buttons Container (Fixed flex shrink issue) -->
+                    <div class="action-buttons-wrapper">
                         <div id="mic-btn" title="Click to Record Voice Note">
                             <i class="fa-solid fa-microphone"></i>
                         </div>
