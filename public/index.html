@@ -930,6 +930,30 @@
         }
         setInterval(checkMidnightReset, 60000); 
 
+        // ==============================================================
+        // --- 1 MINUTE INACTIVITY AUTO-LOCK FEATURE ---
+        // ==============================================================
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                // Lock screen only if chat is currently open
+                if (document.getElementById('chat-container').style.display === 'flex') {
+                    lockScreen();
+                }
+            }, 60000); // 1 Minute limit (60000 ms)
+        }
+
+        // Tracking any kind of activity on the screen to reset timer
+        ['touchstart', 'mousemove', 'keypress', 'click', 'scroll', 'input'].forEach(evt => {
+            document.addEventListener(evt, resetInactivityTimer, true);
+        });
+        
+        // Start the timer when page loads
+        resetInactivityTimer();
+        // ==============================================================
+
+
         // SECURITY CHECK
         document.addEventListener("visibilitychange", function() { 
             if (document.hidden && !isSelectingFile) { lockScreen(); } 
