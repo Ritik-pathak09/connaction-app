@@ -692,12 +692,7 @@
         // Helper to format reply UI inside message (UPDATED FOR SIZE & CLICK TO SCROLL)
         function getReplyBlockHTML() {
             if (!replyToData) return "";
-            return `
-                <div onclick="scrollToTargetMsg('${replyToData.msgId}')" style="background: rgba(0,0,0,0.06); border-left: 4px solid var(--header-pro); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; cursor: pointer; overflow: hidden; box-sizing: border-box;">
-                    <div style="font-size: 11px; font-weight: bold; color: var(--header-pro); margin-bottom: 2px;">${replyToData.sender}</div>
-                    <div style="font-size: 12px; color: #54656f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${replyToData.text}</div>
-                </div>
-            `;
+            return `<div onclick="scrollToTargetMsg('${replyToData.msgId}')" style="background: rgba(0,0,0,0.06); border-left: 4px solid var(--header-pro); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; cursor: pointer; overflow: hidden; box-sizing: border-box; width: fit-content; min-width: 80px; max-width: 100%;"><div style="font-size: 11.5px; font-weight: bold; color: var(--header-pro); margin-bottom: 2px; line-height: 1;">${replyToData.sender}</div><div style="font-size: 12px; color: #54656f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">${replyToData.text}</div></div>`;
         }
 
         function clearReplyState() {
@@ -856,10 +851,14 @@
             } else if(msgEl.querySelector('audio')) {
                 msgText = '🎤 Voice message';
             } else {
-                // Get main text content (ignore existing reply blocks if they exist)
-                const textNodes = Array.from(msgEl.querySelector('.msg-text-content').childNodes);
-                const pureText = textNodes.filter(node => node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR').map(node => node.textContent).join(' ').replace(/\s+/g, ' ').trim();
-                msgText = pureText || msgEl.querySelector('.msg-text-content').innerText.replace(/\s+/g, ' ').trim();
+                let contentDiv = msgEl.querySelector('.msg-text-content');
+                if (contentDiv) {
+                    let clone = contentDiv.cloneNode(true);
+                    let oldReply = clone.querySelector('div'); 
+                    if (oldReply) oldReply.remove();
+                    msgText = clone.textContent.replace(/\s+/g, ' ').trim();
+                }
+                if (!msgText) msgText = "Message";
             }
 
             // MsgId ko replyData mein save kiya
