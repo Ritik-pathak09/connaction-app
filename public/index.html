@@ -70,7 +70,6 @@
         .notes-header-left { display: flex; align-items: center; gap: 8px; font-size: 17px; cursor: pointer; }
         .notes-header-right { display: flex; align-items: center; gap: 20px; font-size: 18px; cursor: pointer; }
         
-        /* New Done Button */
         #save-note-btn { display: none; font-weight: 600; font-size: 17px; color: var(--notes-theme); cursor: pointer; }
 
         .notes-body { 
@@ -107,10 +106,8 @@
         .notes-bottom-toolbar .tools-left { display: flex; gap: 24px; }
         .notes-bottom-toolbar .tools-right { color: var(--notes-theme); cursor: pointer; }
         
-        /* Word Count Display */
         #word-count { font-size: 13px; color: #94a3b8; font-weight: 500; }
 
-        /* Premium Toast Notification */
         #toast-msg {
             visibility: hidden; min-width: 150px; background-color: rgba(30, 41, 59, 0.9); 
             color: #fff; text-align: center; border-radius: 20px; padding: 10px 20px; 
@@ -152,7 +149,7 @@
             max-width: 85%; padding: 8px 12px 6px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
             display: flex; flex-direction: column; -webkit-touch-callout: none; user-select: none;
-            transition: background-color 0.2s, opacity 0.2s;
+            transition: transform 0.2s ease-out, background-color 0.2s, opacity 0.2s; /* Swipe Transition */
         }
         .message.sent { background: var(--msg-out); align-self: flex-end; border-top-right-radius: 0; }
         .message.received { background: var(--msg-in); align-self: flex-start; border-top-left-radius: 0; }
@@ -176,6 +173,14 @@
         }
         .download-img-btn:active { background: rgba(0, 0, 0, 0.8); }
 
+        /* --- NEW DOCUMENT STYLES --- */
+        .doc-message { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px; margin-bottom: 5px; }
+        .doc-message i.fa-file-lines { font-size: 24px; color: #54656f; }
+        .doc-details { flex: 1; overflow: hidden; }
+        .doc-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .doc-download-btn { background: #00a884; color: white; width: 34px; height: 34px; min-width: 34px; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background 0.2s; }
+        .doc-download-btn:active { background: #008f6f; }
+
         #image-preview-bar {
             display: none; padding: 8px 14px; background: #f0f2f5; border-top: 1px solid #d1d7db;
             align-items: center; gap: 10px; position: relative; z-index: 6; flex-shrink: 0;
@@ -183,6 +188,17 @@
         #image-preview-bar img { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d7db; }
         #image-preview-bar span { font-size: 13px; color: #111b21; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #cancel-img-btn { background: #ef4444; color: white; border: none; width: 24px; height: 24px; min-width: 24px; border-radius: 50%; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+
+        /* --- NEW REPLY PREVIEW UI --- */
+        #reply-preview-bar {
+            display: none; padding: 8px 12px; background: #e9edef; border-left: 4px solid var(--header-pro);
+            margin: 0 10px 5px 10px; border-radius: 8px; position: relative; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .reply-content { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+        .reply-sender { font-size: 12px; font-weight: bold; color: var(--header-pro); margin-bottom: 2px; }
+        .reply-text { font-size: 13px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #cancel-reply-btn { color: #8696a0; cursor: pointer; padding: 5px; font-size: 16px; }
 
         /* --- WHATSAPP STYLE INPUT BAR --- */
         .chat-input-container { 
@@ -272,7 +288,6 @@
                     <span>Folders</span>
                 </div>
                 <div class="notes-header-right">
-                    <!-- New Smart Done Button -->
                     <span id="save-note-btn">Done</span>
                     <i class="fa-solid fa-arrow-up-from-bracket" id="fake-share"></i>
                     <i class="fa-solid fa-ellipsis-vertical" id="fake-menu"></i>
@@ -294,7 +309,6 @@
                     <i class="fa-solid fa-camera" id="fake-camera" style="cursor: pointer;"></i>
                     <i class="fa-solid fa-pen-nib" id="fake-markup" style="cursor: pointer;"></i>
                 </div>
-                <!-- Live Word Count -->
                 <span id="word-count">0 Words</span>
                 <div class="tools-right">
                     <i class="fa-solid fa-pen-to-square" id="fake-new-note" title="New Note"></i>
@@ -328,6 +342,15 @@
             </div>
 
             <div class="chat-input-container">
+                <!-- NEW REPLY PREVIEW BAR -->
+                <div id="reply-preview-bar">
+                    <div class="reply-content">
+                        <span class="reply-sender" id="reply-sender-name">Sender</span>
+                        <span class="reply-text" id="reply-msg-text">Message</span>
+                    </div>
+                    <i class="fa-solid fa-xmark" id="cancel-reply-btn"></i>
+                </div>
+
                 <div class="sender-bar">
                     <div class="sender-left">
                         <label><i class="fa-solid fa-user-pen"></i> Name:</label>
@@ -356,7 +379,6 @@
         </div>
     </div>
 
-    <!-- Note Saved Toast -->
     <div id="toast-msg">Note Saved</div>
 
     <!-- Action Sheet (Single Message Delete) -->
@@ -404,7 +426,6 @@
         const toastMsg = document.getElementById('toast-msg');
         const wordCountDisplay = document.getElementById('word-count');
 
-        // Load saved date or set current
         if(localStorage.getItem('savedNoteDate')) {
             dynamicDate.innerText = localStorage.getItem('savedNoteDate');
         } else {
@@ -419,7 +440,7 @@
             let words = text.length > 0 ? text.split(/\s+/).length : 0;
             wordCountDisplay.innerText = `${words} Words`;
         }
-        updateWordCount(); // Init on load
+        updateWordCount();
 
         function showDoneButton() {
             saveNoteBtn.style.display = 'block';
@@ -444,20 +465,16 @@
         });
 
         saveNoteBtn.addEventListener('click', () => {
-            // Update Time
             const newDateStr = `${new Date().toLocaleDateString('en-US', dateOptions)} at ${new Date().toLocaleTimeString('en-US', timeOptions)}`;
             dynamicDate.innerText = newDateStr;
             localStorage.setItem('savedNoteDate', newDateStr);
             
-            // Toggle UI
             saveNoteBtn.style.display = 'none';
             fakeShare.style.display = 'inline-block';
             fakeMenu.style.display = 'inline-block';
             
-            notesInput.blur();
-            noteTitleInput.blur();
+            notesInput.blur(); noteTitleInput.blur();
             
-            // Show Toast
             toastMsg.className = "show";
             setTimeout(function(){ toastMsg.className = toastMsg.className.replace("show", ""); }, 2000);
         });
@@ -489,7 +506,6 @@
             updateWordCount();
         });
 
-        // --- PREVENT RUBBER BANDING / SCREEN SLIDE ---
         if (window.visualViewport) {
             const viewportHandler = () => {
                 const appFrame = document.getElementById('appFrame');
@@ -566,6 +582,9 @@
             }
         });
 
+        // REPLY LOGIC STATE
+        let replyToData = null;
+        
         let mediaRecorder; let audioChunks = []; const micBtn = document.getElementById('mic-btn');
         micBtn.addEventListener('click', async () => {
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
@@ -581,8 +600,11 @@
                             const base64Audio = reader.result;
                             const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
                             const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                            const audioHTML = `<audio controls src="${base64Audio}"></audio>`;
+                            
+                            let replyBlockHTML = getReplyBlockHTML();
+                            const audioHTML = replyBlockHTML + `<audio controls src="${base64Audio}"></audio>`;
                             socket.emit('send_message', { id: msgId, sender: senderName, text: audioHTML, time: timeStr });
+                            clearReplyState();
                         };
                     };
                     mediaRecorder.start(); micBtn.classList.add('recording'); micBtn.title = "Recording... Click to Stop";
@@ -593,7 +615,6 @@
         });
 
         let isSelectingFile = false; 
-
         const attachBtn = document.getElementById('attach-btn');
         const chatCameraBtn = document.getElementById('chat-camera-btn');
         const fileInput = document.getElementById('fileInput');
@@ -652,10 +673,28 @@
         socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); });
         socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; });
 
+        // Helper to format reply UI inside message
+        function getReplyBlockHTML() {
+            if (!replyToData) return "";
+            return `
+                <div style="background: rgba(0,0,0,0.06); border-left: 4px solid var(--header-pro); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; cursor: pointer;">
+                    <div style="font-size: 11px; font-weight: bold; color: var(--header-pro); margin-bottom: 2px;">${replyToData.sender}</div>
+                    <div style="font-size: 12px; color: #54656f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${replyToData.text}</div>
+                </div>
+            `;
+        }
+
+        function clearReplyState() {
+            replyToData = null;
+            document.getElementById('reply-preview-bar').style.display = 'none';
+        }
+
         function sendMessage() {
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             
+            let replyBlockHTML = getReplyBlockHTML();
+
             if (pendingImageData) {
                 let contentHTML = "";
                 if (pendingImageData.type.startsWith('image/')) { 
@@ -667,10 +706,21 @@
                             </a>
                         </div>`; 
                 } 
-                else { contentHTML = `<i class="fa-solid fa-file-lines"></i> ${pendingImageData.name} (Attached)`; }
+                else { 
+                    contentHTML = `
+                        <div class="doc-message">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <div class="doc-details">
+                                <div class="doc-name">${pendingImageData.name}</div>
+                            </div>
+                            <a href="${pendingImageData.data}" download="${pendingImageData.name}" class="doc-download-btn" title="Download Document">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        </div>`; 
+                }
                 
                 const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                socket.emit('send_message', { id: imgMsgId, sender: senderName, text: contentHTML, time: timeStr });
+                socket.emit('send_message', { id: imgMsgId, sender: senderName, text: replyBlockHTML + contentHTML, time: timeStr });
                 
                 pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = '';
                 
@@ -678,15 +728,17 @@
                     document.getElementById('mic-btn').style.display = 'flex';
                     document.getElementById('sendBtn').style.display = 'none';
                 }
+                clearReplyState();
             }
 
             const text = messageInput.value.trim();
             if (text !== '') {
                 const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                socket.emit('send_message', { id: textMsgId, sender: senderName, text: text, time: timeStr });
+                socket.emit('send_message', { id: textMsgId, sender: senderName, text: replyBlockHTML + text, time: timeStr });
                 
                 messageInput.value = ''; messageInput.style.height = '44px'; 
                 document.getElementById('mic-btn').style.display = 'flex'; document.getElementById('sendBtn').style.display = 'none';
+                clearReplyState();
             }
             messageInput.focus();
         }
@@ -697,36 +749,113 @@
             else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
 
-        // --- LONG PRESS TO DELETE SYSTEM ---
+        // --- LONG PRESS TO DELETE & SWIPE TO REPLY SYSTEM ---
         let pressTimer;
         let selectedMessageId = null;
+        let startX = 0, startY = 0;
+        let isSwiping = false;
+        let activeSwipeEl = null;
         const actionSheet = document.getElementById('action-sheet-overlay');
 
         messageBox.addEventListener('contextmenu', (e) => {
-            if (e.target.closest('.download-img-btn')) return;
+            if (e.target.closest('.download-img-btn') || e.target.closest('.doc-download-btn')) return;
             if (e.target.closest('.message')) e.preventDefault();
         });
 
         function handleTouchStart(e) {
-            if (e.target.closest('.download-img-btn')) return;
+            if (e.target.closest('.download-img-btn') || e.target.closest('.doc-download-btn')) return;
 
             const msgEl = e.target.closest('.message');
             if (!msgEl || msgEl.innerText.includes('Secure session initialized.') || msgEl.innerText.includes('Logs purged.')) return;
             
+            // For Swipe
+            startX = e.touches ? e.touches[0].clientX : e.clientX;
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+            isSwiping = false;
+            activeSwipeEl = msgEl;
+            activeSwipeEl.style.transition = 'none'; // Smooth drag
+
+            // For Long Press
             selectedMessageId = msgEl.id;
             pressTimer = setTimeout(() => {
-                msgEl.classList.add('selected-for-delete');
-                actionSheet.style.display = 'flex';
-                if (navigator.vibrate) navigator.vibrate(50); 
+                if(!isSwiping){
+                    msgEl.classList.add('selected-for-delete');
+                    actionSheet.style.display = 'flex';
+                    if (navigator.vibrate) navigator.vibrate(50); 
+                }
             }, 600); 
         }
 
-        function handleTouchEnd() { clearTimeout(pressTimer); }
+        function handleTouchMove(e) {
+            if(!activeSwipeEl) return;
+            const currentX = e.touches ? e.touches[0].clientX : e.clientX;
+            const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+
+            // Detect horizontal swipe vs vertical scroll
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                isSwiping = true;
+                clearTimeout(pressTimer); // Cancel long press delete
+                if (e.cancelable) e.preventDefault(); // Stop page back-navigation gesture
+
+                if (deltaX > 0 && deltaX < 100) { // Swipe Right to Reply
+                    activeSwipeEl.style.transform = `translateX(${deltaX}px)`;
+                }
+            } else {
+                clearTimeout(pressTimer); // Cancel long press if scrolling vertically
+            }
+        }
+
+        function handleTouchEnd() { 
+            clearTimeout(pressTimer); 
+            if(activeSwipeEl && isSwiping) {
+                const currentTransform = activeSwipeEl.style.transform;
+                const match = currentTransform.match(/translateX\((.*)px\)/);
+                if (match && parseFloat(match[1]) > 55) { // Threshold for reply
+                    triggerReply(activeSwipeEl);
+                    if (navigator.vibrate) navigator.vibrate(30);
+                }
+                // Reset position
+                activeSwipeEl.style.transition = 'transform 0.2s ease-out';
+                activeSwipeEl.style.transform = 'translateX(0)';
+            }
+            activeSwipeEl = null;
+            isSwiping = false;
+        }
+
+        function triggerReply(msgEl) {
+            const senderName = msgEl.querySelector('.msg-sender-name').innerText;
+            let msgText = "Message";
+            
+            // Extract text correctly based on content type
+            if(msgEl.querySelector('.doc-name')) {
+                msgText = '📄 ' + msgEl.querySelector('.doc-name').innerText;
+            } else if(msgEl.querySelector('img')) {
+                msgText = '📷 Photo';
+            } else if(msgEl.querySelector('audio')) {
+                msgText = '🎤 Voice message';
+            } else {
+                // Get main text content (ignore existing reply blocks if they exist)
+                const textNodes = Array.from(msgEl.querySelector('.msg-text-content').childNodes);
+                const pureText = textNodes.filter(node => node.nodeType === Node.TEXT_NODE || node.nodeName === 'BR').map(node => node.textContent).join('').trim();
+                msgText = pureText || msgEl.querySelector('.msg-text-content').innerText;
+            }
+
+            replyToData = { sender: senderName, text: msgText };
+            document.getElementById('reply-sender-name').innerText = senderName;
+            document.getElementById('reply-msg-text').innerText = msgText;
+            document.getElementById('reply-preview-bar').style.display = 'flex';
+            document.getElementById('messageInput').focus();
+        }
+
+        document.getElementById('cancel-reply-btn').addEventListener('click', clearReplyState);
 
         messageBox.addEventListener('touchstart', handleTouchStart);
+        messageBox.addEventListener('touchmove', handleTouchMove, { passive: false }); 
         messageBox.addEventListener('touchend', handleTouchEnd);
-        messageBox.addEventListener('touchmove', handleTouchEnd); 
         messageBox.addEventListener('mousedown', handleTouchStart); 
+        messageBox.addEventListener('mousemove', handleTouchMove);
         messageBox.addEventListener('mouseup', handleTouchEnd);
         messageBox.addEventListener('mouseleave', handleTouchEnd);
 
