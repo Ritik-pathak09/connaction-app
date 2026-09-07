@@ -768,15 +768,16 @@
             const msgEl = e.target.closest('.message');
             if (!msgEl || msgEl.innerText.includes('Secure session initialized.') || msgEl.innerText.includes('Logs purged.')) return;
             
-            // For Swipe
+            // Touch points
             startX = e.touches ? e.touches[0].clientX : e.clientX;
             startY = e.touches ? e.touches[0].clientY : e.clientY;
             isSwiping = false;
             activeSwipeEl = msgEl;
-            activeSwipeEl.style.transition = 'none'; // Smooth drag
+            activeSwipeEl.style.transition = 'none';
 
-            // For Long Press
             selectedMessageId = msgEl.id;
+            
+            // Start long press timer
             pressTimer = setTimeout(() => {
                 if(!isSwiping){
                     msgEl.classList.add('selected-for-delete');
@@ -793,17 +794,19 @@
             const deltaX = currentX - startX;
             const deltaY = currentY - startY;
 
-            // Detect horizontal swipe vs vertical scroll
+            // Agar finger thodi bhi hilti hai (>10px) toh delete timer cancel kardo
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                clearTimeout(pressTimer);
+            }
+
+            // Swipe to reply logic (Sirf jab horizontally slide kare)
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
                 isSwiping = true;
-                clearTimeout(pressTimer); // Cancel long press delete
-                if (e.cancelable) e.preventDefault(); // Stop page back-navigation gesture
+                if (e.cancelable) e.preventDefault(); 
 
-                if (deltaX > 0 && deltaX < 100) { // Swipe Right to Reply
+                if (deltaX > 0 && deltaX < 100) { 
                     activeSwipeEl.style.transform = `translateX(${deltaX}px)`;
                 }
-            } else {
-                clearTimeout(pressTimer); // Cancel long press if scrolling vertically
             }
         }
 
@@ -812,7 +815,7 @@
             if(activeSwipeEl && isSwiping) {
                 const currentTransform = activeSwipeEl.style.transform;
                 const match = currentTransform.match(/translateX\((.*)px\)/);
-                if (match && parseFloat(match[1]) > 55) { // Threshold for reply
+                if (match && parseFloat(match[1]) > 50) { 
                     triggerReply(activeSwipeEl);
                     if (navigator.vibrate) navigator.vibrate(30);
                 }
