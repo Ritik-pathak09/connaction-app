@@ -805,12 +805,10 @@
             const deltaX = currentX - startX;
             const deltaY = currentY - startY;
 
-            // Agar finger thodi bhi hilti hai (>10px) toh delete timer cancel kardo
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                 clearTimeout(pressTimer);
             }
 
-            // Swipe to reply logic (Sirf jab horizontally slide kare)
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
                 isSwiping = true;
                 if (e.cancelable) e.preventDefault(); 
@@ -840,10 +838,9 @@
 
         function triggerReply(msgEl) {
             const senderName = msgEl.querySelector('.msg-sender-name').innerText;
-            const msgId = msgEl.id; // ORIGINAL MESSAGE ID STORE KAR RAHE HAIN
+            const msgId = msgEl.id; 
             let msgText = "Message";
             
-            // Extract text correctly based on content type
             if(msgEl.querySelector('.doc-name')) {
                 msgText = '📄 ' + msgEl.querySelector('.doc-name').innerText;
             } else if(msgEl.querySelector('img')) {
@@ -861,7 +858,6 @@
                 if (!msgText) msgText = "Message";
             }
 
-            // MsgId ko replyData mein save kiya
             replyToData = { sender: senderName, text: msgText, msgId: msgId };
             
             document.getElementById('reply-sender-name').innerText = senderName;
@@ -955,31 +951,38 @@
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
-                // Lock screen only if chat is currently open
                 if (document.getElementById('chat-container').style.display === 'flex') {
                     lockScreen();
                 }
-            }, 60000); // 1 Minute limit (60000 ms)
+            }, 60000); // 1 Minute limit
         }
 
-        // Tracking any kind of activity on the screen to reset timer
         ['touchstart', 'mousemove', 'keypress', 'click', 'scroll', 'input'].forEach(evt => {
             document.addEventListener(evt, resetInactivityTimer, true);
         });
         
-        // Start the timer when page loads
         resetInactivityTimer();
+        
         // ==============================================================
+        // --- ADVANCED SECURITY CHECK (ANTI-SCREENSHOT / APP SWITCHER) ---
+        // ==============================================================
+        function instantLock() {
+            if (!isSelectingFile) { 
+                lockScreen(); 
+                // Ye line screen ko turant (synchronously) update hone ke liye force karti hai
+                // Taki OS ka screenshot lene se pehle UI update ho jaye.
+                document.body.offsetHeight; 
+            }
+        }
 
-
-        // SECURITY CHECK
         document.addEventListener("visibilitychange", function() { 
-            if (document.hidden && !isSelectingFile) { lockScreen(); } 
+            if (document.visibilityState === 'hidden' || document.hidden) { instantLock(); } 
         });
         
-        window.addEventListener("blur", function() { 
-            if (!isSelectingFile) { lockScreen(); } 
-        });
+        window.addEventListener("blur", instantLock);
+        window.addEventListener("pagehide", instantLock);
+        window.addEventListener("freeze", instantLock); // Naye mobile browsers ke liye
+        document.addEventListener("freeze", instantLock);
     </script>
 </body>
 </html>
