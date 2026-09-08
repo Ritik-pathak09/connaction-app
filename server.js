@@ -18,13 +18,14 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// Message Schema & Model (Added time field to store live IST time)
+// Message Schema & Model (Added 'status' field to track Read/Delivered)
 const messageSchema = new mongoose.Schema({
     id: String,
     sender: String,
     text: String,
     image: String,
     time: String,
+    status: { type: String, default: 'sent' }, // NAYA: Blue ticks track karne ke liye
     timestamp: { type: Date, default: Date.now }
 });
 
@@ -78,7 +79,8 @@ io.on('connection', async (socket) => {
                 sender: data.sender,
                 text: data.text,
                 image: data.image,
-                time: istTime
+                time: istTime,
+                status: 'sent' // Status set to sent initially
             });
             await newMessage.save();
             io.emit('receive_message', newMessage);
@@ -87,7 +89,7 @@ io.on('connection', async (socket) => {
         }
     });
 
-    // --- NEW: Edit message event sync from database ---
+    // Edit message event sync from database
     socket.on('edit_message', async (data) => {
         try {
             // Database mein purana message dhundho aur text update karo
@@ -97,6 +99,34 @@ io.on('connection', async (socket) => {
             io.emit('message_edited', { id: data.id, text: data.text });
         } catch (err) {
             console.error('Error editing message:', err);
+        }
+    });
+
+    // --- NAYA (NEW): Typing Indicators ---
+    socket.on('typing', (name) => {
+        // Jab koi type kare toh dusre ko batao
+        socket.broadcast.emit('user_typing', name);
+    });
+
+    socket.on('stop_typing', () => {
+        // Jab ruk jaye toh dusre ko batao
+        socket.broadcast.emit('user_stopped_typing');
+    });
+
+    // --- NAYA (NEW): Mark Messages as Read (Blue Ticks) ---
+    socket.on('mark_read', async (readerName) => {
+        try {
+            // Jo message dusre ne bheje hain aur abhi tak 'read' nahi hue hain, unko 'read' mark karo
+            const result = await Message.updateMany(
+                { sender: { $ne: readerName }, status: { $ne: 'read' } },
+                { $set: { status: 'read' } }
+            );
+            // Agar koi message update hua hai toh sabko signal bhejo ticks blue karne ke liye
+            if (result.modifiedCount > 0) {
+                io.emit('messages_read');
+            }
+        } catch (err) {
+            console.error('Error marking read:', err);
         }
     });
 
