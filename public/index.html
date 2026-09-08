@@ -808,7 +808,7 @@
             if (text !== '') {
                 if (editingMessageId) {
                     // NEW EDIT LOGIC
-                    socket.emit('edit_message', { id: editingMessageId, text: text }); // Sends to server if you add it later
+                    socket.emit('edit_message', { id: editingMessageId, text: text }); 
                     
                     // Update Local UI Immediately 
                     const el = document.getElementById(editingMessageId);
@@ -1070,19 +1070,30 @@
             cancelSelection();
         });
 
-        // Emoji Click Logic
+        // --- NEW UPDATED EMOJI TOGGLE LOGIC ---
         document.querySelectorAll('#emoji-box span').forEach(emoji => {
             emoji.addEventListener('click', (e) => {
                 if(selectedMessageId) {
                     const el = document.getElementById(selectedMessageId);
                     if(el) {
                         let reactDiv = el.querySelector('.reactions-wrapper');
-                        if(!reactDiv) {
+                        const clickedEmoji = e.target.innerText;
+                        
+                        if (reactDiv) {
+                            if (reactDiv.innerText === clickedEmoji) {
+                                // Agar same emoji pe click kiya, toh use remove kar do
+                                reactDiv.remove();
+                            } else {
+                                // Agar dusre emoji pe click kiya, toh emoji change kar do
+                                reactDiv.innerText = clickedEmoji;
+                            }
+                        } else {
+                            // Agar pehle se koi emoji nahi hai, toh naya banao
                             reactDiv = document.createElement('div');
                             reactDiv.className = 'reactions-wrapper';
+                            reactDiv.innerText = clickedEmoji;
                             el.appendChild(reactDiv);
                         }
-                        reactDiv.innerText = e.target.innerText;
                     }
                 }
                 cancelSelection();
