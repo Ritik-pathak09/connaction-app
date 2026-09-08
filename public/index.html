@@ -20,35 +20,16 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
         html, body {
-            width: 100%;
-            height: 100%;
-            height: 100dvh; 
-            background-color: #cbd5e1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden !important; 
-            position: fixed;
-            inset: 0;
-            touch-action: none;
-            overscroll-behavior: none !important; 
+            width: 100%; height: 100%; height: 100dvh; 
+            background-color: #cbd5e1; display: flex; justify-content: center; align-items: center;
+            overflow: hidden !important; position: fixed; inset: 0; touch-action: none; overscroll-behavior: none !important; 
         }
 
         .app-frame {
-            width: 100%;
-            max-width: 480px;
-            height: 100%;
-            height: 100dvh; 
-            background: #fff;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            overscroll-behavior: none;
+            width: 100%; max-width: 480px; height: 100%; height: 100dvh; 
+            background: #fff; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+            overflow: hidden; overscroll-behavior: none;
         }
         @media(min-width: 481px) {
             .app-frame { height: 90vh; border-radius: 12px; max-height: 850px; position: relative; transform: none; left: auto; }
@@ -56,45 +37,27 @@
 
         /* --- DISGUISE: ULTRA-REALISTIC PREMIUM NOTES APP --- */
         #notes-container {
-            width: 100%; height: 100%; background: #ffffff;
-            display: flex; flex-direction: column; position: absolute; top: 0; left: 0; z-index: 2;
+            width: 100%; height: 100%; background: #ffffff; display: flex; flex-direction: column; position: absolute; top: 0; left: 0; z-index: 2;
         }
         .notes-header {
-            background: #ffffff; 
-            color: var(--notes-theme); 
-            padding: 16px 20px; 
-            display: flex;
-            justify-content: space-between; align-items: center;
-            flex-shrink: 0;
+            background: #ffffff; color: var(--notes-theme); padding: 16px 20px; 
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
         }
         .notes-header-left { display: flex; align-items: center; gap: 8px; font-size: 17px; cursor: pointer; }
         .notes-header-right { display: flex; align-items: center; gap: 20px; font-size: 18px; cursor: pointer; }
-        
         #save-note-btn { display: none; font-weight: 600; font-size: 17px; color: var(--notes-theme); cursor: pointer; }
 
         .notes-body { 
-            padding: 10px 24px 20px 24px; 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            overflow-y: auto; 
-            overscroll-behavior: contain; 
+            padding: 10px 24px 20px 24px; flex: 1; display: flex; flex-direction: column; 
+            overflow-y: auto; overscroll-behavior: contain; 
         }
-        
-        .note-title-input {
-            width: 100%; border: none; outline: none; font-size: 28px; font-weight: 700; color: #111b21;
-            margin-bottom: 8px; background: transparent;
-        }
+        .note-title-input { width: 100%; border: none; outline: none; font-size: 28px; font-weight: 700; color: #111b21; margin-bottom: 8px; background: transparent; }
         .note-title-input::placeholder { color: #cbd5e1; }
-        
-        .note-meta {
-            font-size: 13px; color: #8696a0; margin-bottom: 20px;
-        }
+        .note-meta { font-size: 13px; color: #8696a0; margin-bottom: 20px; }
         
         .notes-body textarea {
             width: 100%; flex: 1; border: none; outline: none; background: transparent;
-            resize: none; font-size: 17px; color: #334155; line-height: 1.6;
-            touch-action: manipulation;
+            resize: none; font-size: 17px; color: #334155; line-height: 1.6; touch-action: manipulation;
         }
         .notes-body textarea::placeholder { color: #94a3b8; }
 
@@ -105,7 +68,6 @@
         }
         .notes-bottom-toolbar .tools-left { display: flex; gap: 24px; }
         .notes-bottom-toolbar .tools-right { color: var(--notes-theme); cursor: pointer; }
-        
         #word-count { font-size: 13px; color: #94a3b8; font-weight: 500; }
 
         #toast-msg {
@@ -126,6 +88,7 @@
         .chat-header {
             background: var(--header-pro); color: #fff; padding: 10px 14px;
             display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.3); z-index: 5; flex-shrink: 0;
+            height: 60px;
         }
         .chat-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
         .chat-header i { font-size: 18px; cursor: pointer; color: #e9edef; padding: 5px; transition: color 0.2s; }
@@ -139,22 +102,56 @@
         .user-info h4 { font-size: 15px; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-info span { font-size: 11px; color: #e9edef; display: block; }
         
+        /* --- WHATSAPP SELECTION HEADER & EMOJI UI --- */
+        #selection-header {
+            display: none; background: var(--header-pro); color: #fff; padding: 10px 14px; height: 60px;
+            align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.3); z-index: 6; flex-shrink: 0;
+        }
+        .sh-left, .sh-right { display: flex; align-items: center; gap: 20px; font-size: 20px; }
+        .sh-left i, .sh-right i { cursor: pointer; padding: 5px; color: #fff; }
+        .sh-left span { font-size: 19px; font-weight: 500; }
+        .sh-right { position: relative; }
+        
+        #sh-dropdown {
+            display: none; position: absolute; top: 40px; right: 0; background: white; color: #111b21;
+            border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-direction: column; min-width: 140px; z-index: 20;
+        }
+        .sh-item { padding: 14px 18px; font-size: 15px; cursor: pointer; }
+        .sh-item:hover, .sh-item:active { background: #f0f2f5; }
+
+        #emoji-box {
+            display: none; position: absolute; background: white; padding: 8px 16px; border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); gap: 14px; z-index: 15; font-size: 26px; transition: transform 0.2s;
+            align-items: center; justify-content: center;
+        }
+        #emoji-box span { cursor: pointer; transition: transform 0.1s; user-select: none; }
+        #emoji-box span:active { transform: scale(1.3); }
+
         .chat-messages {
             flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
             background-color: #efeae2; background-image: radial-gradient(#d1d7db 0.75px, transparent 0.75px); 
             background-size: 20px 20px; -webkit-overflow-scrolling: touch; min-height: 0;
-            overscroll-behavior: contain; touch-action: pan-y;
+            overscroll-behavior: contain; touch-action: pan-y; position: relative;
         }
+        
         .message {
             max-width: 85%; padding: 8px 12px 6px 12px; border-radius: 7.5px; font-size: 14px;
             position: relative; word-wrap: break-word; color: var(--text-main); box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
             display: flex; flex-direction: column; -webkit-touch-callout: none; user-select: none;
-            transition: transform 0.2s ease-out, background-color 0.4s, opacity 0.2s; /* Swipe Transition */
+            transition: transform 0.2s ease-out, background-color 0.4s; 
         }
         .message.sent { background: var(--msg-out); align-self: flex-end; border-top-right-radius: 0; }
         .message.received { background: var(--msg-in); align-self: flex-start; border-top-left-radius: 0; }
         
-        .message.selected-for-delete { opacity: 0.7; filter: brightness(0.9); }
+        /* Selected Message Highlight */
+        .message.selected-whatsapp { background-color: #ccebe3 !important; }
+        .message.sent.selected-whatsapp { background-color: #b3e3d5 !important; }
+
+        .reactions-wrapper {
+            position: absolute; bottom: -12px; right: 10px; background: white; border-radius: 12px; padding: 2px 6px;
+            font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 2; border: 1px solid #e9edef; display: flex; gap: 2px;
+        }
+
         .msg-sender-name { font-size: 11px; font-weight: bold; color: #008069; margin-bottom: 3px; display: block; }
         .message.sent .msg-sender-name { color: #005c4b; }
         .msg-text-content { overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; }
@@ -210,9 +207,7 @@
         }
         .sender-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .sender-left label { font-size: 12px; color: #667781; white-space: nowrap; }
-        .sender-left input {
-            background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 4px; color: #111b21; font-size: 12px; width: 90px; outline: none;
-        }
+        .sender-left input { background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 4px; color: #111b21; font-size: 12px; width: 90px; outline: none; }
         .chat-input-area { padding: 0 8px; display: flex; align-items: flex-end; width: 100%; background: transparent; box-sizing: border-box; gap: 8px; }
         .wa-input-wrapper {
             display: flex; align-items: flex-end; background-color: #ffffff; border-radius: 24px; padding: 4px 5px; flex: 1 1 auto; min-width: 0; box-shadow: 0 1px 1px rgba(0,0,0,0.1); min-height: 48px; box-sizing: border-box;
@@ -231,18 +226,6 @@
         #mic-btn.recording { background: #ef4444; animation: pulse 1s infinite; }
         #sendBtn { display: none; } 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-        /* --- DELETE ACTION SHEET --- */
-        #action-sheet-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); justify-content: center; align-items: flex-end; z-index: 200; padding-bottom: 25px;
-        }
-        .action-sheet { width: 92%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .action-sheet-btn { background: #ffffff; border: none; padding: 18px; width: 100%; font-size: 17px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .action-sheet-delete { color: #ff3b30; border-radius: 14px; font-weight: 600; }
-        .action-sheet-cancel { color: #007aff; border-radius: 14px; font-weight: bold; }
-        .action-sheet-btn:active { background: #f0f0f0; }
-        @keyframes slideUp { from { transform: translateY(150%); } to { transform: translateY(0); } }
 
         /* --- CLEAR CHAT CONFIRM MODAL --- */
         #clear-confirm-overlay {
@@ -298,7 +281,6 @@
             <div class="notes-body">
                 <input type="text" class="note-title-input" placeholder="Title" value="Personal Tasks" autocomplete="off" id="noteTitleInput">
                 <div class="note-meta" id="dynamic-date"></div>
-                
                 <textarea id="notesInput" placeholder="Start typing..." spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                 <input type="file" id="dummy-camera-input" accept="image/*" style="display: none;">
             </div>
@@ -317,7 +299,8 @@
         </div>
 
         <div id="chat-container">
-            <div class="chat-header">
+            <!-- Normal Chat Header -->
+            <div class="chat-header" id="normalHeader">
                 <div class="chat-header-left">
                     <i class="fa-solid fa-arrow-left" id="back-to-notes" title="Return"></i>
                     <div class="avatar-circle">RA</div>
@@ -332,7 +315,29 @@
                     <i class="fa-solid fa-lock" id="panic-lock" title="Lock Workspace" style="cursor: pointer;"></i>
                 </div>
             </div>
+
+            <!-- WhatsApp Selection Header (Hidden by Default) -->
+            <div id="selection-header">
+                <div class="sh-left">
+                    <i class="fa-solid fa-arrow-left" id="cancel-selection"></i>
+                    <span id="selection-count">1</span>
+                </div>
+                <div class="sh-right">
+                    <i class="fa-solid fa-trash" id="sh-delete"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" id="sh-dots"></i>
+                    <div id="sh-dropdown">
+                        <div class="sh-item" id="sh-info">Info</div>
+                        <div class="sh-item" id="sh-copy">Copy</div>
+                        <div class="sh-item" id="sh-edit">Edit</div>
+                    </div>
+                </div>
+            </div>
             
+            <!-- Emoji Reaction Box -->
+            <div id="emoji-box">
+                <span>👍</span><span>❤️</span><span>😂</span><span>😮</span><span>😢</span><span>🙏</span>
+            </div>
+
             <div class="chat-messages" id="messageBox"></div>
 
             <div id="image-preview-bar">
@@ -342,7 +347,6 @@
             </div>
 
             <div class="chat-input-container">
-                <!-- NEW REPLY PREVIEW BAR -->
                 <div id="reply-preview-bar">
                     <div class="reply-content">
                         <span class="reply-sender" id="reply-sender-name">Sender</span>
@@ -381,14 +385,6 @@
 
     <div id="toast-msg">Note Saved</div>
 
-    <!-- Action Sheet (Single Message Delete) -->
-    <div id="action-sheet-overlay">
-        <div class="action-sheet">
-            <button class="action-sheet-btn action-sheet-delete" id="confirm-delete-btn">Delete Message</button>
-            <button class="action-sheet-btn action-sheet-cancel" id="cancel-delete-btn">Cancel</button>
-        </div>
-    </div>
-
     <!-- Clear Chat Confirm Modal -->
     <div id="clear-confirm-overlay">
         <div class="clear-confirm-box">
@@ -425,6 +421,12 @@
         const fakeMenu = document.getElementById('fake-menu');
         const toastMsg = document.getElementById('toast-msg');
         const wordCountDisplay = document.getElementById('word-count');
+
+        function showToast(message) {
+            toastMsg.innerText = message;
+            toastMsg.className = "show";
+            setTimeout(function(){ toastMsg.className = toastMsg.className.replace("show", ""); }, 2000);
+        }
 
         if(localStorage.getItem('savedNoteDate')) {
             dynamicDate.innerText = localStorage.getItem('savedNoteDate');
@@ -474,9 +476,7 @@
             fakeMenu.style.display = 'inline-block';
             
             notesInput.blur(); noteTitleInput.blur();
-            
-            toastMsg.className = "show";
-            setTimeout(function(){ toastMsg.className = toastMsg.className.replace("show", ""); }, 2000);
+            showToast("Note Saved");
         });
 
         document.getElementById('fake-folders').addEventListener('click', () => { alert("Local Notes\n\nAll Notes: 1\nRecently Deleted: 0"); });
@@ -551,6 +551,7 @@
             document.getElementById('chat-container').style.display = 'none';
             document.getElementById('passcodeInput').value = '';
             document.querySelector('.sender-bar').style.display = 'none'; 
+            cancelSelection();
         }
         document.getElementById('back-to-notes').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
         document.getElementById('panic-lock').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
@@ -670,10 +671,9 @@
         });
 
         socket.on('receive_message', (msg) => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time); scrollToBottom(); });
-        socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); });
-        socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; });
+        socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); cancelSelection(); });
+        socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; cancelSelection(); });
 
-        // --- NEW CLICK TO SCROLL FUNCTION ---
         window.scrollToTargetMsg = function(msgId) {
             if(!msgId || msgId === 'undefined') return;
             const el = document.getElementById(msgId);
@@ -681,7 +681,7 @@
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 el.style.transition = 'background-color 0.4s ease';
                 const originalBg = el.style.backgroundColor;
-                el.style.backgroundColor = 'rgba(7, 94, 84, 0.3)'; // WhatsApp highlight effect
+                el.style.backgroundColor = 'rgba(7, 94, 84, 0.3)'; 
                 setTimeout(() => {
                     el.style.backgroundColor = originalBg;
                     setTimeout(() => el.style.transition = '', 400);
@@ -689,7 +689,6 @@
             }
         };
 
-        // Helper to format reply UI inside message (UPDATED FOR SIZE & CLICK TO SCROLL)
         function getReplyBlockHTML() {
             if (!replyToData) return "";
             return `<div onclick="scrollToTargetMsg('${replyToData.msgId}')" style="background: rgba(0,0,0,0.06); border-left: 4px solid var(--header-pro); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; cursor: pointer; overflow: hidden; box-sizing: border-box; width: fit-content; min-width: 80px; max-width: 100%;"><div style="font-size: 11.5px; font-weight: bold; color: var(--header-pro); margin-bottom: 2px; line-height: 1;">${replyToData.sender}</div><div style="font-size: 12px; color: #54656f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">${replyToData.text}</div></div>`;
@@ -760,13 +759,19 @@
             else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
 
-        // --- LONG PRESS TO DELETE & SWIPE TO REPLY SYSTEM ---
+        // ==============================================================
+        // --- WHATSAPP STYLE LONG PRESS & SELECTION LOGIC ---
+        // ==============================================================
         let pressTimer;
         let selectedMessageId = null;
         let startX = 0, startY = 0;
         let isSwiping = false;
         let activeSwipeEl = null;
-        const actionSheet = document.getElementById('action-sheet-overlay');
+
+        const normalHeader = document.getElementById('normalHeader');
+        const selectionHeader = document.getElementById('selectionHeader');
+        const emojiBox = document.getElementById('emoji-box');
+        const shDropdown = document.getElementById('sh-dropdown');
 
         messageBox.addEventListener('contextmenu', (e) => {
             if (e.target.closest('.download-img-btn') || e.target.closest('.doc-download-btn')) return;
@@ -779,23 +784,47 @@
             const msgEl = e.target.closest('.message');
             if (!msgEl || msgEl.innerText.includes('Secure session initialized.') || msgEl.innerText.includes('Logs purged.')) return;
             
-            // Touch points
             startX = e.touches ? e.touches[0].clientX : e.clientX;
             startY = e.touches ? e.touches[0].clientY : e.clientY;
             isSwiping = false;
             activeSwipeEl = msgEl;
             activeSwipeEl.style.transition = 'none';
 
-            selectedMessageId = msgEl.id;
-            
-            // Start long press timer
+            // Cancel any existing selection if a new long press starts
+            if(selectedMessageId && selectedMessageId !== msgEl.id) {
+                cancelSelection();
+            }
+
             pressTimer = setTimeout(() => {
                 if(!isSwiping){
-                    msgEl.classList.add('selected-for-delete');
-                    actionSheet.style.display = 'flex';
+                    selectedMessageId = msgEl.id;
+                    msgEl.classList.add('selected-whatsapp');
+                    
+                    // Show Selection Header
+                    normalHeader.style.display = 'none';
+                    selectionHeader.style.display = 'flex';
+                    
+                    // Show & Position Emoji Box
+                    const chatRect = document.getElementById('chat-container').getBoundingClientRect();
+                    const rect = msgEl.getBoundingClientRect();
+                    
+                    emojiBox.style.display = 'flex';
+                    
+                    // Calculate Y position
+                    let topPos = rect.top - chatRect.top - 55;
+                    if (topPos < 65) topPos = rect.bottom - chatRect.top + 5; // if touching top bar, push below message
+                    
+                    // Calculate X position
+                    let leftPos = rect.left - chatRect.left + (rect.width / 2) - (emojiBox.offsetWidth / 2);
+                    if(leftPos < 10) leftPos = 10;
+                    if(leftPos + emojiBox.offsetWidth > chatRect.width - 10) leftPos = chatRect.width - emojiBox.offsetWidth - 10;
+
+                    emojiBox.style.top = topPos + 'px';
+                    emojiBox.style.left = leftPos + 'px';
+
                     if (navigator.vibrate) navigator.vibrate(50); 
                 }
-            }, 600); 
+            }, 550); // 550ms for natural long press
         }
 
         function handleTouchMove(e) {
@@ -805,16 +834,15 @@
             const deltaX = currentX - startX;
             const deltaY = currentY - startY;
 
-            // Agar finger thodi bhi hilti hai (>10px) toh delete timer cancel kardo
+            // Cancel timer if finger moves too much
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                 clearTimeout(pressTimer);
             }
 
-            // Swipe to reply logic (Sirf jab horizontally slide kare)
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            // Swipe to reply logic
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10 && !selectedMessageId) {
                 isSwiping = true;
                 if (e.cancelable) e.preventDefault(); 
-
                 if (deltaX > 0 && deltaX < 100) { 
                     activeSwipeEl.style.transform = `translateX(${deltaX}px)`;
                 }
@@ -823,14 +851,13 @@
 
         function handleTouchEnd() { 
             clearTimeout(pressTimer); 
-            if(activeSwipeEl && isSwiping) {
+            if(activeSwipeEl && isSwiping && !selectedMessageId) {
                 const currentTransform = activeSwipeEl.style.transform;
                 const match = currentTransform.match(/translateX\((.*)px\)/);
                 if (match && parseFloat(match[1]) > 50) { 
                     triggerReply(activeSwipeEl);
                     if (navigator.vibrate) navigator.vibrate(30);
                 }
-                // Reset position
                 activeSwipeEl.style.transition = 'transform 0.2s ease-out';
                 activeSwipeEl.style.transform = 'translateX(0)';
             }
@@ -838,12 +865,106 @@
             isSwiping = false;
         }
 
+        function cancelSelection() {
+            if(selectedMessageId) {
+                const el = document.getElementById(selectedMessageId);
+                if(el) el.classList.remove('selected-whatsapp');
+            }
+            selectedMessageId = null;
+            normalHeader.style.display = 'flex';
+            selectionHeader.style.display = 'none';
+            emojiBox.style.display = 'none';
+            shDropdown.style.display = 'none';
+        }
+
+        // Header Action Listeners
+        document.getElementById('cancel-selection').addEventListener('click', cancelSelection);
+        
+        document.getElementById('sh-delete').addEventListener('click', () => {
+            if (selectedMessageId) deleteMessage(selectedMessageId);
+        });
+
+        document.getElementById('sh-dots').addEventListener('click', (e) => {
+            e.stopPropagation();
+            shDropdown.style.display = shDropdown.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        document.getElementById('sh-info').addEventListener('click', () => {
+            alert("Message Info: Delivered & Read status not available yet.");
+            cancelSelection();
+        });
+
+        document.getElementById('sh-edit').addEventListener('click', () => {
+            alert("Edit feature coming soon!");
+            cancelSelection();
+        });
+
+        document.getElementById('sh-copy').addEventListener('click', () => {
+            if(selectedMessageId) {
+                const el = document.getElementById(selectedMessageId);
+                let msgText = "";
+                let contentDiv = el.querySelector('.msg-text-content');
+                if (contentDiv) {
+                    let clone = contentDiv.cloneNode(true);
+                    let oldReply = clone.querySelector('div'); 
+                    if (oldReply) oldReply.remove();
+                    msgText = clone.textContent.trim();
+                }
+                if(msgText) {
+                    navigator.clipboard.writeText(msgText).then(() => {
+                        showToast("Message copied");
+                    });
+                } else {
+                    showToast("No text to copy");
+                }
+            }
+            cancelSelection();
+        });
+
+        // Emoji Click Logic
+        document.querySelectorAll('#emoji-box span').forEach(emoji => {
+            emoji.addEventListener('click', (e) => {
+                if(selectedMessageId) {
+                    const el = document.getElementById(selectedMessageId);
+                    if(el) {
+                        let reactDiv = el.querySelector('.reactions-wrapper');
+                        if(!reactDiv) {
+                            reactDiv = document.createElement('div');
+                            reactDiv.className = 'reactions-wrapper';
+                            el.appendChild(reactDiv);
+                        }
+                        reactDiv.innerText = e.target.innerText;
+                    }
+                }
+                cancelSelection();
+            });
+        });
+
+        // Dismiss selection if clicking outside message/header
+        document.addEventListener('click', (e) => {
+            if (selectedMessageId && !e.target.closest('.message') && !e.target.closest('#selection-header') && !e.target.closest('#emoji-box')) {
+                cancelSelection();
+            }
+            if (shDropdown.style.display === 'flex' && !e.target.closest('#sh-dropdown') && e.target.id !== 'sh-dots') {
+                shDropdown.style.display = 'none';
+            }
+        });
+
+        messageBox.addEventListener('touchstart', handleTouchStart);
+        messageBox.addEventListener('touchmove', handleTouchMove, { passive: false }); 
+        messageBox.addEventListener('touchend', handleTouchEnd);
+        messageBox.addEventListener('mousedown', handleTouchStart); 
+        messageBox.addEventListener('mousemove', handleTouchMove);
+        messageBox.addEventListener('mouseup', handleTouchEnd);
+        messageBox.addEventListener('mouseleave', handleTouchEnd);
+
+        // ==============================================================
+        
         function triggerReply(msgEl) {
             const senderName = msgEl.querySelector('.msg-sender-name').innerText;
-            const msgId = msgEl.id; // ORIGINAL MESSAGE ID STORE KAR RAHE HAIN
+            const msgId = msgEl.id; 
             let msgText = "Message";
             
-            // Extract text correctly based on content type
             if(msgEl.querySelector('.doc-name')) {
                 msgText = '📄 ' + msgEl.querySelector('.doc-name').innerText;
             } else if(msgEl.querySelector('img')) {
@@ -861,7 +982,6 @@
                 if (!msgText) msgText = "Message";
             }
 
-            // MsgId ko replyData mein save kiya
             replyToData = { sender: senderName, text: msgText, msgId: msgId };
             
             document.getElementById('reply-sender-name').innerText = senderName;
@@ -871,34 +991,6 @@
         }
 
         document.getElementById('cancel-reply-btn').addEventListener('click', clearReplyState);
-
-        messageBox.addEventListener('touchstart', handleTouchStart);
-        messageBox.addEventListener('touchmove', handleTouchMove, { passive: false }); 
-        messageBox.addEventListener('touchend', handleTouchEnd);
-        messageBox.addEventListener('mousedown', handleTouchStart); 
-        messageBox.addEventListener('mousemove', handleTouchMove);
-        messageBox.addEventListener('mouseup', handleTouchEnd);
-        messageBox.addEventListener('mouseleave', handleTouchEnd);
-
-        document.getElementById('cancel-delete-btn').addEventListener('click', closeActionSheet);
-        
-        document.getElementById('confirm-delete-btn').addEventListener('click', () => {
-            if (selectedMessageId) deleteMessage(selectedMessageId);
-            closeActionSheet();
-        });
-
-        function closeActionSheet() {
-            actionSheet.style.display = 'none';
-            if (selectedMessageId) {
-                const el = document.getElementById(selectedMessageId);
-                if (el) el.classList.remove('selected-for-delete');
-            }
-            selectedMessageId = null;
-        }
-
-        actionSheet.addEventListener('click', (e) => {
-            if (e.target === actionSheet) closeActionSheet();
-        });
 
         // --- QUICK CLEAR CHAT SYSTEM ---
         const quickClearBtn = document.getElementById('quick-clear-btn');
@@ -955,22 +1047,17 @@
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
-                // Lock screen only if chat is currently open
                 if (document.getElementById('chat-container').style.display === 'flex') {
                     lockScreen();
                 }
-            }, 60000); // 1 Minute limit (60000 ms)
+            }, 60000); // 1 Minute
         }
 
-        // Tracking any kind of activity on the screen to reset timer
         ['touchstart', 'mousemove', 'keypress', 'click', 'scroll', 'input'].forEach(evt => {
             document.addEventListener(evt, resetInactivityTimer, true);
         });
         
-        // Start the timer when page loads
         resetInactivityTimer();
-        // ==============================================================
-
 
         // SECURITY CHECK
         document.addEventListener("visibilitychange", function() { 
