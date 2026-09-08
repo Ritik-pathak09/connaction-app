@@ -87,6 +87,19 @@ io.on('connection', async (socket) => {
         }
     });
 
+    // --- NEW: Edit message event sync from database ---
+    socket.on('edit_message', async (data) => {
+        try {
+            // Database mein purana message dhundho aur text update karo
+            await Message.updateOne({ id: data.id }, { $set: { text: data.text } });
+            
+            // Sabhi connected users ko batao ki message edit ho gaya hai
+            io.emit('message_edited', { id: data.id, text: data.text });
+        } catch (err) {
+            console.error('Error editing message:', err);
+        }
+    });
+
     // Delete message event sync from database
     socket.on('delete_message', async (msgId) => {
         try {
