@@ -769,7 +769,7 @@
         let activeSwipeEl = null;
 
         const normalHeader = document.getElementById('normalHeader');
-        const selectionHeader = document.getElementById('selection-header'); // FIX: Added hyphen to match HTML ID
+        const selectionHeader = document.getElementById('selection-header'); 
         const emojiBox = document.getElementById('emoji-box');
         const shDropdown = document.getElementById('sh-dropdown');
 
@@ -887,6 +887,7 @@
         document.getElementById('sh-dots').addEventListener('click', (e) => {
             e.stopPropagation();
             shDropdown.style.display = shDropdown.style.display === 'flex' ? 'none' : 'flex';
+            emojiBox.style.display = 'none'; // ADDED THIS LINE TO HIDE EMOJI BOX LIKES WHATSAPP
         });
 
         document.getElementById('sh-info').addEventListener('click', () => {
