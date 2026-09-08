@@ -227,6 +227,25 @@
         #sendBtn { display: none; } 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
+        /* --- MESSAGE INFO MODAL (NEW) --- */
+        #info-modal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #e9edef; z-index: 100; flex-direction: column;
+        }
+        .info-header {
+            background: var(--header-pro); color: #fff; padding: 10px 14px; height: 60px;
+            display: flex; align-items: center; gap: 15px; font-size: 19px; font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3); flex-shrink: 0;
+        }
+        .info-header i { cursor: pointer; padding: 5px; }
+        .info-body { padding: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .info-preview-box { display: flex; flex-direction: column; align-items: flex-end; width: 100%; }
+        .info-stats-card { background: white; border-radius: 8px; padding: 15px 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .info-stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .info-stat-row:last-child { margin-bottom: 0; }
+        .info-stat-label { font-size: 16px; color: #111b21; display: flex; align-items: center; gap: 12px; }
+        .info-stat-time { font-size: 14px; color: #667781; }
+
         /* --- CLEAR CHAT CONFIRM MODAL --- */
         #clear-confirm-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -347,6 +366,7 @@
             </div>
 
             <div class="chat-input-container">
+                <!-- Reusing Reply Bar for Edit Preview as well -->
                 <div id="reply-preview-bar">
                     <div class="reply-content">
                         <span class="reply-sender" id="reply-sender-name">Sender</span>
@@ -380,6 +400,30 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- NEW: Message Info Modal (WhatsApp Style) -->
+            <div id="info-modal">
+                <div class="info-header">
+                    <i class="fa-solid fa-arrow-left" id="close-info"></i>
+                    <span>Message Info</span>
+                </div>
+                <div class="info-body">
+                    <div class="info-preview-box" id="info-preview-container">
+                        <!-- Message will be cloned here -->
+                    </div>
+                    <div class="info-stats-card">
+                        <div class="info-stat-row">
+                            <span class="info-stat-label"><i class="fa-solid fa-check-double" style="color: #53bdeb;"></i> Read</span>
+                            <span class="info-stat-time" id="info-time-read">--</span>
+                        </div>
+                        <div class="info-stat-row">
+                            <span class="info-stat-label"><i class="fa-solid fa-check-double" style="color: #8696a0;"></i> Delivered</span>
+                            <span class="info-stat-time" id="info-time-delivered">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
 
@@ -523,7 +567,7 @@
         });
 
         document.addEventListener('touchmove', function(e) {
-            if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput')) {
+            if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput') && !e.target.closest('.info-body')) {
                 e.preventDefault();
             }
         }, { passive: false });
@@ -551,6 +595,7 @@
             document.getElementById('chat-container').style.display = 'none';
             document.getElementById('passcodeInput').value = '';
             document.querySelector('.sender-bar').style.display = 'none'; 
+            document.getElementById('info-modal').style.display = 'none';
             cancelSelection();
         }
         document.getElementById('back-to-notes').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
@@ -583,8 +628,9 @@
             }
         });
 
-        // REPLY LOGIC STATE
+        // REPLY & EDIT LOGIC STATE
         let replyToData = null;
+        let editingMessageId = null; 
         
         let mediaRecorder; let audioChunks = []; const micBtn = document.getElementById('mic-btn');
         micBtn.addEventListener('click', async () => {
@@ -674,6 +720,22 @@
         socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); cancelSelection(); });
         socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; cancelSelection(); });
 
+        // Listen for edits from server
+        socket.on('message_edited', (data) => {
+            const el = document.getElementById(data.id);
+            if(el) {
+                let contentDiv = el.querySelector('.msg-text-content');
+                if(contentDiv) {
+                    let oldReply = contentDiv.querySelector('div[onclick^="scrollToTargetMsg"]');
+                    if(oldReply) {
+                        contentDiv.innerHTML = oldReply.outerHTML + data.text + ' <span style="font-size: 10px; color: #8696a0; font-style: italic;">(edited)</span>';
+                    } else {
+                        contentDiv.innerHTML = data.text + ' <span style="font-size: 10px; color: #8696a0; font-style: italic;">(edited)</span>';
+                    }
+                }
+            }
+        });
+
         window.scrollToTargetMsg = function(msgId) {
             if(!msgId || msgId === 'undefined') return;
             const el = document.getElementById(msgId);
@@ -696,6 +758,7 @@
 
         function clearReplyState() {
             replyToData = null;
+            editingMessageId = null;
             document.getElementById('reply-preview-bar').style.display = 'none';
         }
 
@@ -705,7 +768,7 @@
             
             let replyBlockHTML = getReplyBlockHTML();
 
-            if (pendingImageData) {
+            if (pendingImageData && !editingMessageId) {
                 let contentHTML = "";
                 if (pendingImageData.type.startsWith('image/')) { 
                     contentHTML = `
@@ -743,8 +806,28 @@
 
             const text = messageInput.value.trim();
             if (text !== '') {
-                const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                socket.emit('send_message', { id: textMsgId, sender: senderName, text: replyBlockHTML + text, time: timeStr });
+                if (editingMessageId) {
+                    // NEW EDIT LOGIC
+                    socket.emit('edit_message', { id: editingMessageId, text: text }); // Sends to server if you add it later
+                    
+                    // Update Local UI Immediately 
+                    const el = document.getElementById(editingMessageId);
+                    if(el) {
+                        let contentDiv = el.querySelector('.msg-text-content');
+                        if(contentDiv) {
+                            let oldReply = contentDiv.querySelector('div[onclick^="scrollToTargetMsg"]');
+                            if(oldReply) {
+                                contentDiv.innerHTML = oldReply.outerHTML + text + ' <span style="font-size: 10px; color: #8696a0; font-style: italic;">(edited)</span>';
+                            } else {
+                                contentDiv.innerHTML = text + ' <span style="font-size: 10px; color: #8696a0; font-style: italic;">(edited)</span>';
+                            }
+                        }
+                    }
+                } else {
+                    // NORMAL SEND LOGIC
+                    const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
+                    socket.emit('send_message', { id: textMsgId, sender: senderName, text: replyBlockHTML + text, time: timeStr });
+                }
                 
                 messageInput.value = ''; messageInput.style.height = '44px'; 
                 document.getElementById('mic-btn').style.display = 'flex'; document.getElementById('sendBtn').style.display = 'none';
@@ -887,16 +970,77 @@
         document.getElementById('sh-dots').addEventListener('click', (e) => {
             e.stopPropagation();
             shDropdown.style.display = shDropdown.style.display === 'flex' ? 'none' : 'flex';
-            emojiBox.style.display = 'none'; // ADDED THIS LINE TO HIDE EMOJI BOX LIKES WHATSAPP
+            emojiBox.style.display = 'none'; 
         });
 
+        // --- NEW INFO LOGIC ---
         document.getElementById('sh-info').addEventListener('click', () => {
-            alert("Message Info: Delivered & Read status not available yet.");
+            if(selectedMessageId) {
+                const el = document.getElementById(selectedMessageId);
+                const previewContainer = document.getElementById('info-preview-container');
+                
+                // Clone the message to show in preview
+                let clone = el.cloneNode(true);
+                clone.classList.remove('selected-whatsapp');
+                clone.style.margin = "0"; // Reset any margins
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(clone);
+                
+                // Set Fake Times
+                const timeEl = el.querySelector('.time');
+                const msgTime = timeEl ? timeEl.innerText : "Just now";
+                document.getElementById('info-time-delivered').innerText = msgTime;
+                document.getElementById('info-time-read').innerText = msgTime; // Usually same or slightly later
+
+                document.getElementById('info-modal').style.display = 'flex';
+            }
             cancelSelection();
         });
 
+        document.getElementById('close-info').addEventListener('click', () => {
+            document.getElementById('info-modal').style.display = 'none';
+        });
+
+        // --- NEW EDIT LOGIC ---
         document.getElementById('sh-edit').addEventListener('click', () => {
-            alert("Edit feature coming soon!");
+            if(selectedMessageId) {
+                const el = document.getElementById(selectedMessageId);
+                let msgText = "";
+                let contentDiv = el.querySelector('.msg-text-content');
+                
+                if (contentDiv) {
+                    let clone = contentDiv.cloneNode(true);
+                    // Remove old reply box if editing a message that was a reply
+                    let oldReply = clone.querySelector('div[onclick^="scrollToTargetMsg"]'); 
+                    if (oldReply) oldReply.remove();
+                    // Remove "edited" tag text if editing an already edited message
+                    let editedTag = clone.querySelector('span');
+                    if(editedTag && editedTag.innerText.includes('(edited)')) editedTag.remove();
+                    
+                    msgText = clone.textContent.trim();
+                }
+                
+                if(msgText) {
+                    editingMessageId = selectedMessageId;
+                    
+                    // Show in input
+                    messageInput.value = msgText;
+                    messageInput.style.height = '44px';
+                    messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+                    
+                    // Show Preview Bar (Reusing Reply UI for Edit)
+                    document.getElementById('reply-sender-name').innerText = "Edit Message";
+                    document.getElementById('reply-msg-text').innerText = msgText;
+                    document.getElementById('reply-preview-bar').style.display = 'flex';
+                    replyToData = null; // Important: Make sure it's not a reply
+
+                    document.getElementById('mic-btn').style.display = 'none';
+                    document.getElementById('sendBtn').style.display = 'flex';
+                    messageInput.focus();
+                } else {
+                    showToast("Cannot edit media files");
+                }
+            }
             cancelSelection();
         });
 
@@ -909,6 +1053,10 @@
                     let clone = contentDiv.cloneNode(true);
                     let oldReply = clone.querySelector('div'); 
                     if (oldReply) oldReply.remove();
+                    
+                    let editedTag = clone.querySelector('span');
+                    if(editedTag && editedTag.innerText.includes('(edited)')) editedTag.remove();
+
                     msgText = clone.textContent.trim();
                 }
                 if(msgText) {
@@ -978,12 +1126,16 @@
                     let clone = contentDiv.cloneNode(true);
                     let oldReply = clone.querySelector('div'); 
                     if (oldReply) oldReply.remove();
+                    let editedTag = clone.querySelector('span');
+                    if(editedTag && editedTag.innerText.includes('(edited)')) editedTag.remove();
+                    
                     msgText = clone.textContent.replace(/\s+/g, ' ').trim();
                 }
                 if (!msgText) msgText = "Message";
             }
 
             replyToData = { sender: senderName, text: msgText, msgId: msgId };
+            editingMessageId = null; // Clear edit state just in case
             
             document.getElementById('reply-sender-name').innerText = senderName;
             document.getElementById('reply-msg-text').innerText = msgText;
@@ -991,7 +1143,14 @@
             document.getElementById('messageInput').focus();
         }
 
-        document.getElementById('cancel-reply-btn').addEventListener('click', clearReplyState);
+        // Updated Cancel Reply/Edit button
+        document.getElementById('cancel-reply-btn').addEventListener('click', () => {
+            clearReplyState();
+            if(document.getElementById('messageInput').value.trim() === '') {
+                document.getElementById('mic-btn').style.display = 'flex';
+                document.getElementById('sendBtn').style.display = 'none';
+            }
+        });
 
         // --- QUICK CLEAR CHAT SYSTEM ---
         const quickClearBtn = document.getElementById('quick-clear-btn');
