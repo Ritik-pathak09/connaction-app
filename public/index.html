@@ -100,8 +100,14 @@
         }
         .user-info { min-width: 0; overflow: hidden; }
         .user-info h4 { font-size: 15px; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-info span { font-size: 11px; color: #e9edef; display: block; }
+        .user-info span { font-size: 11px; color: #e9edef; display: block; transition: color 0.2s; }
         
+        /* NEW: Styles for Typing and Ticks */
+        .typing-text { color: #25d366 !important; font-style: italic; font-weight: 500; font-size: 12px !important; }
+        .msg-ticks { margin-left: 5px; display: inline-block; vertical-align: middle; font-size: 11px; }
+        .tick-grey { color: #8696a0; }
+        .tick-blue { color: #53bdeb; }
+
         /* --- WHATSAPP SELECTION HEADER & EMOJI UI --- */
         #selection-header {
             display: none; background: var(--header-pro); color: #fff; padding: 10px 14px; height: 60px;
@@ -227,7 +233,7 @@
         #sendBtn { display: none; } 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* --- MESSAGE INFO MODAL (NEW) --- */
+        /* --- MESSAGE INFO MODAL --- */
         #info-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #e9edef; z-index: 100; flex-direction: column;
@@ -325,7 +331,7 @@
                     <div class="avatar-circle">RA</div>
                     <div class="user-info">
                         <h4>Rian Project Sync</h4>
-                        <span>Online • Secured</span>
+                        <span id="user-status-text">Online • Secured</span>
                     </div>
                 </div>
                 <div style="display: flex; gap: 15px; align-items: center; flex-shrink: 0;">
@@ -401,7 +407,7 @@
                 </div>
             </div>
             
-            <!-- NEW: Message Info Modal (WhatsApp Style) -->
+            <!-- NEW: Message Info Modal -->
             <div id="info-modal">
                 <div class="info-header">
                     <i class="fa-solid fa-arrow-left" id="close-info"></i>
@@ -582,6 +588,7 @@
                 document.getElementById('chat-container').style.display = 'flex';
                 history.pushState({chatOpen: true}, "", "");
                 scrollToBottom();
+                markAsRead(); // Trigger read receipt notification when you open app
             } else {
                 const btn = document.querySelector('#verifyPin');
                 btn.innerText = "Access Denied"; btn.style.background = "#ef4444";
@@ -613,7 +620,11 @@
             if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) { senderBar.style.display = 'none'; }
         });
 
+        // --- NEW: Typing Indicator Logic ---
         const messageInput = document.getElementById('messageInput');
+        let typingTimer;
+        const statusText = document.getElementById('user-status-text');
+        
         messageInput.addEventListener('input', function() {
             this.style.height = '44px'; 
             const newHeight = Math.min(this.scrollHeight, 100); 
@@ -626,7 +637,50 @@
                 document.getElementById('mic-btn').style.display = 'flex';
                 document.getElementById('sendBtn').style.display = 'none';
             }
+
+            // Emit Typing event
+            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+            socket.emit('typing', senderName);
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                socket.emit('stop_typing');
+            }, 1500);
         });
+
+        socket.on('user_typing', (name) => {
+            const currentName = document.getElementById('activeSenderName').value.trim();
+            if(name.toLowerCase() !== currentName.toLowerCase()) {
+                statusText.innerText = "typing...";
+                statusText.classList.add('typing-text');
+            }
+        });
+        
+        socket.on('user_stopped_typing', () => {
+            statusText.innerText = "Online • Secured";
+            statusText.classList.remove('typing-text');
+        });
+
+        // --- NEW: Send Read Signal Function ---
+        function markAsRead() {
+            if(document.getElementById('chat-container').style.display === 'flex') {
+                const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+                socket.emit('mark_read', senderName);
+            }
+        }
+        
+        document.getElementById('messageBox').addEventListener('click', markAsRead);
+        document.getElementById('messageBox').addEventListener('scroll', markAsRead);
+        messageInput.addEventListener('focus', markAsRead);
+        window.addEventListener('focus', markAsRead);
+
+        // Turn ticks blue when we get signal
+        socket.on('messages_read', () => {
+            document.querySelectorAll('.msg-ticks i.tick-grey').forEach(icon => {
+                icon.classList.remove('tick-grey');
+                icon.classList.add('tick-blue');
+            });
+        });
+
 
         // REPLY & EDIT LOGIC STATE
         let replyToData = null;
@@ -712,11 +766,17 @@
                 messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Secure session initialized.<div class="msg-footer"><span class="time">Just now</span></div></div>`;
                 return;
             }
-            history.forEach(msg => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time); });
+            // Include status in history loading
+            history.forEach(msg => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time, msg.status); });
             scrollToBottom();
         });
 
-        socket.on('receive_message', (msg) => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time); scrollToBottom(); });
+        socket.on('receive_message', (msg) => { 
+            appendMessageUI(msg.id, msg.sender, msg.text, msg.time, msg.status); 
+            scrollToBottom(); 
+            markAsRead(); // Auto read when inside chat
+        });
+        
         socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); cancelSelection(); });
         socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; cancelSelection(); });
 
@@ -807,10 +867,8 @@
             const text = messageInput.value.trim();
             if (text !== '') {
                 if (editingMessageId) {
-                    // NEW EDIT LOGIC
                     socket.emit('edit_message', { id: editingMessageId, text: text }); 
                     
-                    // Update Local UI Immediately 
                     const el = document.getElementById(editingMessageId);
                     if(el) {
                         let contentDiv = el.querySelector('.msg-text-content');
@@ -824,13 +882,13 @@
                         }
                     }
                 } else {
-                    // NORMAL SEND LOGIC
                     const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                     socket.emit('send_message', { id: textMsgId, sender: senderName, text: replyBlockHTML + text, time: timeStr });
                 }
                 
                 messageInput.value = ''; messageInput.style.height = '44px'; 
                 document.getElementById('mic-btn').style.display = 'flex'; document.getElementById('sendBtn').style.display = 'none';
+                socket.emit('stop_typing'); // Stop typing when sent
                 clearReplyState();
             }
             messageInput.focus();
@@ -873,7 +931,6 @@
             activeSwipeEl = msgEl;
             activeSwipeEl.style.transition = 'none';
 
-            // Cancel any existing selection if a new long press starts
             if(selectedMessageId && selectedMessageId !== msgEl.id) {
                 cancelSelection();
             }
@@ -883,21 +940,17 @@
                     selectedMessageId = msgEl.id;
                     msgEl.classList.add('selected-whatsapp');
                     
-                    // Show Selection Header
                     normalHeader.style.display = 'none';
                     selectionHeader.style.display = 'flex';
                     
-                    // Show & Position Emoji Box
                     const chatRect = document.getElementById('chat-container').getBoundingClientRect();
                     const rect = msgEl.getBoundingClientRect();
                     
                     emojiBox.style.display = 'flex';
                     
-                    // Calculate Y position
                     let topPos = rect.top - chatRect.top - 55;
-                    if (topPos < 65) topPos = rect.bottom - chatRect.top + 5; // if touching top bar, push below message
+                    if (topPos < 65) topPos = rect.bottom - chatRect.top + 5; 
                     
-                    // Calculate X position
                     let leftPos = rect.left - chatRect.left + (rect.width / 2) - (emojiBox.offsetWidth / 2);
                     if(leftPos < 10) leftPos = 10;
                     if(leftPos + emojiBox.offsetWidth > chatRect.width - 10) leftPos = chatRect.width - emojiBox.offsetWidth - 10;
@@ -907,7 +960,7 @@
 
                     if (navigator.vibrate) navigator.vibrate(50); 
                 }
-            }, 550); // 550ms for natural long press
+            }, 550); 
         }
 
         function handleTouchMove(e) {
@@ -917,12 +970,10 @@
             const deltaX = currentX - startX;
             const deltaY = currentY - startY;
 
-            // Cancel timer if finger moves too much
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                 clearTimeout(pressTimer);
             }
 
-            // Swipe to reply logic
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10 && !selectedMessageId) {
                 isSwiping = true;
                 if (e.cancelable) e.preventDefault(); 
@@ -960,7 +1011,6 @@
             shDropdown.style.display = 'none';
         }
 
-        // Header Action Listeners
         document.getElementById('cancel-selection').addEventListener('click', cancelSelection);
         
         document.getElementById('sh-delete').addEventListener('click', () => {
@@ -973,24 +1023,26 @@
             emojiBox.style.display = 'none'; 
         });
 
-        // --- NEW INFO LOGIC ---
         document.getElementById('sh-info').addEventListener('click', () => {
             if(selectedMessageId) {
                 const el = document.getElementById(selectedMessageId);
                 const previewContainer = document.getElementById('info-preview-container');
                 
-                // Clone the message to show in preview
                 let clone = el.cloneNode(true);
                 clone.classList.remove('selected-whatsapp');
-                clone.style.margin = "0"; // Reset any margins
+                clone.style.margin = "0"; 
                 previewContainer.innerHTML = '';
                 previewContainer.appendChild(clone);
                 
-                // Set Fake Times
                 const timeEl = el.querySelector('.time');
                 const msgTime = timeEl ? timeEl.innerText : "Just now";
+                
+                // Show blue ticks in info if read
+                const hasBlueTick = el.querySelector('.tick-blue') !== null;
+                const infoReadTime = hasBlueTick ? msgTime : "--";
+                
                 document.getElementById('info-time-delivered').innerText = msgTime;
-                document.getElementById('info-time-read').innerText = msgTime; // Usually same or slightly later
+                document.getElementById('info-time-read').innerText = infoReadTime; 
 
                 document.getElementById('info-modal').style.display = 'flex';
             }
@@ -1001,7 +1053,6 @@
             document.getElementById('info-modal').style.display = 'none';
         });
 
-        // --- NEW EDIT LOGIC ---
         document.getElementById('sh-edit').addEventListener('click', () => {
             if(selectedMessageId) {
                 const el = document.getElementById(selectedMessageId);
@@ -1010,10 +1061,8 @@
                 
                 if (contentDiv) {
                     let clone = contentDiv.cloneNode(true);
-                    // Remove old reply box if editing a message that was a reply
                     let oldReply = clone.querySelector('div[onclick^="scrollToTargetMsg"]'); 
                     if (oldReply) oldReply.remove();
-                    // Remove "edited" tag text if editing an already edited message
                     let editedTag = clone.querySelector('span');
                     if(editedTag && editedTag.innerText.includes('(edited)')) editedTag.remove();
                     
@@ -1022,17 +1071,14 @@
                 
                 if(msgText) {
                     editingMessageId = selectedMessageId;
-                    
-                    // Show in input
                     messageInput.value = msgText;
                     messageInput.style.height = '44px';
                     messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
                     
-                    // Show Preview Bar (Reusing Reply UI for Edit)
                     document.getElementById('reply-sender-name').innerText = "Edit Message";
                     document.getElementById('reply-msg-text').innerText = msgText;
                     document.getElementById('reply-preview-bar').style.display = 'flex';
-                    replyToData = null; // Important: Make sure it's not a reply
+                    replyToData = null; 
 
                     document.getElementById('mic-btn').style.display = 'none';
                     document.getElementById('sendBtn').style.display = 'flex';
@@ -1070,7 +1116,6 @@
             cancelSelection();
         });
 
-        // --- NEW UPDATED EMOJI TOGGLE LOGIC ---
         document.querySelectorAll('#emoji-box span').forEach(emoji => {
             emoji.addEventListener('click', (e) => {
                 if(selectedMessageId) {
@@ -1081,14 +1126,11 @@
                         
                         if (reactDiv) {
                             if (reactDiv.innerText === clickedEmoji) {
-                                // Agar same emoji pe click kiya, toh use remove kar do
                                 reactDiv.remove();
                             } else {
-                                // Agar dusre emoji pe click kiya, toh emoji change kar do
                                 reactDiv.innerText = clickedEmoji;
                             }
                         } else {
-                            // Agar pehle se koi emoji nahi hai, toh naya banao
                             reactDiv = document.createElement('div');
                             reactDiv.className = 'reactions-wrapper';
                             reactDiv.innerText = clickedEmoji;
@@ -1100,7 +1142,6 @@
             });
         });
 
-        // Dismiss selection if clicking outside message/header
         document.addEventListener('click', (e) => {
             if (selectedMessageId && !e.target.closest('.message') && !e.target.closest('#selection-header') && !e.target.closest('#emoji-box')) {
                 cancelSelection();
@@ -1118,8 +1159,6 @@
         messageBox.addEventListener('mouseup', handleTouchEnd);
         messageBox.addEventListener('mouseleave', handleTouchEnd);
 
-        // ==============================================================
-        
         function triggerReply(msgEl) {
             const senderName = msgEl.querySelector('.msg-sender-name').innerText;
             const msgId = msgEl.id; 
@@ -1146,7 +1185,7 @@
             }
 
             replyToData = { sender: senderName, text: msgText, msgId: msgId };
-            editingMessageId = null; // Clear edit state just in case
+            editingMessageId = null; 
             
             document.getElementById('reply-sender-name').innerText = senderName;
             document.getElementById('reply-msg-text').innerText = msgText;
@@ -1154,7 +1193,6 @@
             document.getElementById('messageInput').focus();
         }
 
-        // Updated Cancel Reply/Edit button
         document.getElementById('cancel-reply-btn').addEventListener('click', () => {
             clearReplyState();
             if(document.getElementById('messageInput').value.trim() === '') {
@@ -1163,7 +1201,6 @@
             }
         });
 
-        // --- QUICK CLEAR CHAT SYSTEM ---
         const quickClearBtn = document.getElementById('quick-clear-btn');
         const clearConfirmOverlay = document.getElementById('clear-confirm-overlay');
         const cancelClearAction = document.getElementById('cancel-clear-action');
@@ -1181,18 +1218,27 @@
             if (e.target === clearConfirmOverlay) clearConfirmOverlay.style.display = 'none';
         });
 
-        function appendMessageUI(id, sender, text, time) {
+        // --- UPDATED UI FUNCTION TO ADD TICKS ---
+        function appendMessageUI(id, sender, text, time, status = 'sent') {
             const msgDiv = document.createElement('div');
             if (id) msgDiv.id = id;
             const currentTypingName = document.getElementById('activeSenderName').value.trim();
             const isMe = (sender.toLowerCase() === currentTypingName.toLowerCase());
             
             msgDiv.classList.add('message', isMe ? 'sent' : 'received');
+            
+            // Ticks only for the person who sent it
+            let ticksHTML = '';
+            if (isMe) {
+                let tickClass = (status === 'read') ? 'tick-blue' : 'tick-grey';
+                ticksHTML = `<span class="msg-ticks"><i class="fa-solid fa-check-double ${tickClass}"></i></span>`;
+            }
+
             msgDiv.innerHTML = `
                 <span class="msg-sender-name">${sender}</span>
                 <div class="msg-text-content">${text}</div>
                 <div class="msg-footer">
-                    <span class="time">${time}</span>
+                    <span class="time">${time}</span>${ticksHTML}
                 </div>
             `;
             messageBox.appendChild(msgDiv);
@@ -1211,9 +1257,6 @@
         }
         setInterval(checkMidnightReset, 60000); 
 
-        // ==============================================================
-        // --- 1 MINUTE INACTIVITY AUTO-LOCK FEATURE ---
-        // ==============================================================
         let inactivityTimer;
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
@@ -1221,7 +1264,7 @@
                 if (document.getElementById('chat-container').style.display === 'flex') {
                     lockScreen();
                 }
-            }, 60000); // 1 Minute
+            }, 60000); 
         }
 
         ['touchstart', 'mousemove', 'keypress', 'click', 'scroll', 'input'].forEach(evt => {
@@ -1230,7 +1273,6 @@
         
         resetInactivityTimer();
 
-        // SECURITY CHECK
         document.addEventListener("visibilitychange", function() { 
             if (document.hidden && !isSelectingFile) { lockScreen(); } 
         });
