@@ -718,6 +718,16 @@
             else { senderBar.style.display = 'flex'; document.getElementById('activeSenderName').focus(); }
         });
 
+        // --- NEW FIX: SENDER NAME PERSISTENCE ---
+        const activeSenderNameInput = document.getElementById('activeSenderName');
+        if (localStorage.getItem('savedSenderName')) {
+            activeSenderNameInput.value = localStorage.getItem('savedSenderName');
+        }
+        activeSenderNameInput.addEventListener('input', (e) => {
+            localStorage.setItem('savedSenderName', e.target.value);
+        });
+        // ----------------------------------------
+
         // Hide sender bar and attachment menu when clicking outside
         document.addEventListener('click', (e) => {
             if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) { 
