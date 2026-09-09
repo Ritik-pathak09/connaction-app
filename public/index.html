@@ -215,6 +215,24 @@
         .reply-text { font-size: 13px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #cancel-reply-btn { color: #8696a0; cursor: pointer; padding: 5px; font-size: 16px; }
 
+        /* --- WHATSAPP STYLE ATTACHMENT MENU (NEW) --- */
+        .attachment-menu {
+            display: none; position: absolute; bottom: 65px; left: 10px; right: 10px;
+            background: #ffffff; border-radius: 16px; padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10;
+            grid-template-columns: repeat(3, 1fr); gap: 20px; 
+            animation: slideUpAttach 0.2s ease-out;
+        }
+        @keyframes slideUpAttach { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .attach-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .attach-item .icon-circle {
+            width: 52px; height: 52px; border-radius: 50%; display: flex;
+            justify-content: center; align-items: center; color: white; font-size: 22px;
+            transition: transform 0.1s;
+        }
+        .attach-item:active .icon-circle { transform: scale(0.9); }
+        .attach-item span { font-size: 13px; color: #54656f; font-weight: 500; }
+
         /* --- WHATSAPP STYLE INPUT BAR --- */
         .chat-input-container { 
             background: transparent; display: flex; flex-direction: column; width: 100%; max-width: 100vw; 
@@ -384,6 +402,34 @@
             </div>
 
             <div class="chat-input-container">
+                <!-- NEW: WhatsApp Style Attachment Menu -->
+                <div id="attachment-menu" class="attachment-menu">
+                    <div class="attach-item" id="attach-doc">
+                        <div class="icon-circle" style="background: #7f66ff;"><i class="fa-solid fa-file-lines"></i></div>
+                        <span>Document</span>
+                    </div>
+                    <div class="attach-item" id="attach-camera">
+                        <div class="icon-circle" style="background: #ed415c;"><i class="fa-solid fa-camera"></i></div>
+                        <span>Camera</span>
+                    </div>
+                    <div class="attach-item" id="attach-gallery">
+                        <div class="icon-circle" style="background: #bf59cf;"><i class="fa-solid fa-image"></i></div>
+                        <span>Gallery</span>
+                    </div>
+                    <div class="attach-item" onclick="alert('Audio sharing coming soon!')">
+                        <div class="icon-circle" style="background: #f06539;"><i class="fa-solid fa-headphones"></i></div>
+                        <span>Audio</span>
+                    </div>
+                    <div class="attach-item" onclick="alert('Location sharing coming soon!')">
+                        <div class="icon-circle" style="background: #00a884;"><i class="fa-solid fa-location-dot"></i></div>
+                        <span>Location</span>
+                    </div>
+                    <div class="attach-item" onclick="alert('Contact sharing coming soon!')">
+                        <div class="icon-circle" style="background: #008fcc;"><i class="fa-solid fa-user"></i></div>
+                        <span>Contact</span>
+                    </div>
+                </div>
+
                 <div id="reply-preview-bar">
                     <div class="reply-content">
                         <span class="reply-sender" id="reply-sender-name">Sender</span>
@@ -404,9 +450,13 @@
                         <i class="fa-solid fa-face-smile" id="toggle-sender-btn" title="Change Name"></i>
                         <textarea class="msg-box" id="messageInput" placeholder="Message" rows="1" spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                         
-                        <i class="fa-solid fa-paperclip" title="Attach File/Image" id="attach-btn"></i>
+                        <i class="fa-solid fa-paperclip" title="Attach" id="attach-btn"></i>
                         <i class="fa-solid fa-camera" title="Camera" id="chat-camera-btn"></i>
-                        <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
+                        
+                        <!-- NEW: Separate inputs for multiple files and direct camera -->
+                        <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display: none;">
+                        <input type="file" id="docInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx" multiple style="display: none;">
+                        <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" style="display: none;">
                     </div>
                     
                     <div class="action-buttons-wrapper">
@@ -584,7 +634,7 @@
         });
 
         document.addEventListener('touchmove', function(e) {
-            if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput') && !e.target.closest('.info-body')) {
+            if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput') && !e.target.closest('.info-body') && !e.target.closest('#attachment-menu')) {
                 e.preventDefault();
             }
         }, { passive: false });
@@ -599,7 +649,7 @@
                 document.getElementById('chat-container').style.display = 'flex';
                 history.pushState({chatOpen: true}, "", "");
                 scrollToBottom();
-                markAsRead(); // Trigger read receipt notification when you open app
+                markAsRead(); 
             } else {
                 const btn = document.querySelector('#verifyPin');
                 btn.innerText = "Access Denied"; btn.style.background = "#ef4444";
@@ -614,6 +664,7 @@
             document.getElementById('passcodeInput').value = '';
             document.querySelector('.sender-bar').style.display = 'none'; 
             document.getElementById('info-modal').style.display = 'none';
+            document.getElementById('attachment-menu').style.display = 'none';
             cancelSelection();
         }
         document.getElementById('back-to-notes').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
@@ -627,11 +678,18 @@
             if (senderBar.style.display === 'flex') { senderBar.style.display = 'none'; } 
             else { senderBar.style.display = 'flex'; document.getElementById('activeSenderName').focus(); }
         });
+
+        // Hide sender bar and attachment menu when clicking outside
         document.addEventListener('click', (e) => {
-            if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) { senderBar.style.display = 'none'; }
+            if (senderBar.style.display === 'flex' && !e.target.closest('.sender-bar') && !e.target.closest('#toggle-sender-btn')) { 
+                senderBar.style.display = 'none'; 
+            }
+            if (document.getElementById('attachment-menu').style.display === 'grid' && !e.target.closest('#attachment-menu') && !e.target.closest('#attach-btn')) {
+                document.getElementById('attachment-menu').style.display = 'none';
+            }
         });
 
-        // --- NEW: Typing Indicator Logic ---
+        // --- Typing Indicator Logic ---
         const messageInput = document.getElementById('messageInput');
         let typingTimer;
         const statusText = document.getElementById('user-status-text');
@@ -641,7 +699,7 @@
             const newHeight = Math.min(this.scrollHeight, 100); 
             this.style.height = newHeight + 'px';
             
-            if(this.value.trim() !== '' || pendingImageData !== null) {
+            if(this.value.trim() !== '' || pendingFilesArray.length > 0) {
                 document.getElementById('mic-btn').style.display = 'none';
                 document.getElementById('sendBtn').style.display = 'flex';
             } else {
@@ -649,7 +707,6 @@
                 document.getElementById('sendBtn').style.display = 'none';
             }
 
-            // Emit Typing event
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             socket.emit('typing', senderName);
             clearTimeout(typingTimer);
@@ -671,7 +728,6 @@
             statusText.classList.remove('typing-text');
         });
 
-        // --- NEW: Send Read Signal Function ---
         function markAsRead() {
             if(document.getElementById('chat-container').style.display === 'flex') {
                 const senderName = document.getElementById('activeSenderName').value.trim() || "User";
@@ -684,14 +740,12 @@
         messageInput.addEventListener('focus', markAsRead);
         window.addEventListener('focus', markAsRead);
 
-        // Turn ticks blue when we get signal
         socket.on('messages_read', () => {
             document.querySelectorAll('.msg-ticks i.tick-grey').forEach(icon => {
                 icon.classList.remove('tick-grey');
                 icon.classList.add('tick-blue');
             });
         });
-
 
         // REPLY & EDIT LOGIC STATE
         let replyToData = null;
@@ -716,11 +770,9 @@
                             let replyBlockHTML = getReplyBlockHTML();
                             const audioHTML = replyBlockHTML + `<audio controls src="${base64Audio}"></audio>`;
                             
-                            // 1. INSTANT LOCAL PREVIEW
                             appendMessageUI(msgId, senderName, audioHTML, timeStr, 'sent', true);
                             scrollToBottom();
                             
-                            // 2. EMIT AFTER A SHORT DELAY (So UI updates first)
                             setTimeout(() => {
                                 socket.emit('send_message', { id: msgId, sender: senderName, text: audioHTML, time: timeStr });
                             }, 50);
@@ -735,38 +787,94 @@
             }
         });
 
+        // --- NEW ATTACHMENT & MULTIPLE FILE LOGIC ---
         let isSelectingFile = false; 
+        let pendingFilesArray = []; // Array to hold multiple files
+
         const attachBtn = document.getElementById('attach-btn');
+        const attachmentMenu = document.getElementById('attachment-menu');
         const chatCameraBtn = document.getElementById('chat-camera-btn');
-        const fileInput = document.getElementById('fileInput');
+        
+        const galleryInput = document.getElementById('galleryInput');
+        const docInput = document.getElementById('docInput');
+        const cameraInput = document.getElementById('cameraInput');
+        
         const imagePreviewBar = document.getElementById('image-preview-bar');
         const previewImg = document.getElementById('previewImg');
         const previewFileName = document.getElementById('previewFileName');
         const cancelImgBtn = document.getElementById('cancel-img-btn');
-        let pendingImageData = null;
 
-        attachBtn.addEventListener('click', () => { isSelectingFile = true; fileInput.click(); });
-        chatCameraBtn.addEventListener('click', () => { isSelectingFile = true; fileInput.click(); });
+        // Toggle attachment menu
+        attachBtn.addEventListener('click', (e) => { 
+            e.stopPropagation();
+            attachmentMenu.style.display = attachmentMenu.style.display === 'grid' ? 'none' : 'grid'; 
+        });
 
-        fileInput.addEventListener('change', (e) => {
+        // Direct camera button (outside menu)
+        chatCameraBtn.addEventListener('click', () => { 
+            isSelectingFile = true; 
+            cameraInput.click(); 
+        });
+
+        // Menu items
+        document.getElementById('attach-gallery').addEventListener('click', () => {
+            isSelectingFile = true;
+            galleryInput.click();
+            attachmentMenu.style.display = 'none';
+        });
+        document.getElementById('attach-doc').addEventListener('click', () => {
+            isSelectingFile = true;
+            docInput.click();
+            attachmentMenu.style.display = 'none';
+        });
+        document.getElementById('attach-camera').addEventListener('click', () => {
+            isSelectingFile = true;
+            cameraInput.click();
+            attachmentMenu.style.display = 'none';
+        });
+
+        // Unified function to handle file selection (Single or Multiple)
+        function handleFileSelection(event) {
             isSelectingFile = false; 
-            const file = e.target.files[0];
-            if (file) {
+            const files = event.target.files;
+            
+            if (files && files.length > 0) {
+                pendingFilesArray = Array.from(files); // Store all selected files in array
+                const firstFile = pendingFilesArray[0];
+                
                 const reader = new FileReader();
                 reader.onload = function(uploadEvent) {
-                    pendingImageData = { type: file.type, name: file.name, data: uploadEvent.target.result };
-                    if (file.type.startsWith('image/')) { previewImg.src = uploadEvent.target.result; previewImg.style.display = 'block'; } 
-                    else { previewImg.style.display = 'none'; }
-                    previewFileName.innerText = file.name; imagePreviewBar.style.display = 'flex';
+                    if (firstFile.type.startsWith('image/')) { 
+                        previewImg.src = uploadEvent.target.result; 
+                        previewImg.style.display = 'block'; 
+                    } else { 
+                        previewImg.style.display = 'none'; 
+                    }
                     
+                    // Show how many files are selected
+                    if(pendingFilesArray.length > 1) {
+                        previewFileName.innerText = pendingFilesArray.length + " files selected";
+                    } else {
+                        previewFileName.innerText = firstFile.name; 
+                    }
+                    
+                    imagePreviewBar.style.display = 'flex';
                     document.getElementById('mic-btn').style.display = 'none';
                     document.getElementById('sendBtn').style.display = 'flex';
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(firstFile);
             }
-        });
+        }
+
+        galleryInput.addEventListener('change', handleFileSelection);
+        docInput.addEventListener('change', handleFileSelection);
+        cameraInput.addEventListener('change', handleFileSelection);
+
         cancelImgBtn.addEventListener('click', () => { 
-            pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = ''; 
+            pendingFilesArray = []; 
+            imagePreviewBar.style.display = 'none'; 
+            galleryInput.value = ''; docInput.value = ''; cameraInput.value = '';
+            
             if(document.getElementById('messageInput').value.trim() === '') {
                 document.getElementById('mic-btn').style.display = 'flex';
                 document.getElementById('sendBtn').style.display = 'none';
@@ -786,7 +894,6 @@
                 messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Secure session initialized.<div class="msg-footer"><span class="time">Just now</span></div></div>`;
                 return;
             }
-            // Include status in history loading
             history.forEach(msg => { appendMessageUI(msg.id, msg.sender, msg.text, msg.time, msg.status); });
             scrollToBottom();
         });
@@ -794,13 +901,12 @@
         socket.on('receive_message', (msg) => { 
             appendMessageUI(msg.id, msg.sender, msg.text, msg.time, msg.status); 
             scrollToBottom(); 
-            markAsRead(); // Auto read when inside chat
+            markAsRead(); 
         });
         
         socket.on('delete_message', (msgId) => { const element = document.getElementById(msgId); if (element) element.remove(); cancelSelection(); });
         socket.on('history_cleared', () => { messageBox.innerHTML = `<div class="message received"><span class="msg-sender-name">System</span>Logs purged.<div class="msg-footer"><span class="time">Just now</span></div></div>`; cancelSelection(); });
 
-        // Listen for edits from server
         socket.on('message_edited', (data) => {
             const el = document.getElementById(data.id);
             if(el) {
@@ -842,77 +948,78 @@
             document.getElementById('reply-preview-bar').style.display = 'none';
         }
 
-        function sendMessage() {
-            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
-            const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            
-            let replyBlockHTML = getReplyBlockHTML();
-
-            // --- IMAGE / FILE UPLOAD LOGIC WITH INSTANT PREVIEW ---
-            if (pendingImageData && !editingMessageId) {
+        // Helper function to process and send a single file
+        function processAndSendFile(file, senderName, timeStr, replyBlockHTML) {
+            const reader = new FileReader();
+            reader.onload = function(uploadEvent) {
                 let cleanContentHTML = "";
                 let localContentHTML = "";
                 const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
 
-                if (pendingImageData.type.startsWith('image/')) { 
+                if (file.type.startsWith('image/')) { 
                     cleanContentHTML = `
                         <div class="image-message-container">
-                            <img src="${pendingImageData.data}" alt="Attachment">
-                            <a href="${pendingImageData.data}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image">
+                            <img src="${uploadEvent.target.result}" alt="Attachment">
+                            <a href="${uploadEvent.target.result}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image">
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>`; 
                         
-                    // UI with Loading Overlay to show during upload
                     localContentHTML = `
                         <div class="image-message-container">
-                            <img src="${pendingImageData.data}" alt="Attachment" style="opacity: 0.7;">
-                            <div class="upload-overlay">
-                                <div class="upload-spinner"></div>
-                            </div>
-                            <a href="${pendingImageData.data}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image" style="display:none;">
+                            <img src="${uploadEvent.target.result}" alt="Attachment" style="opacity: 0.7;">
+                            <div class="upload-overlay"><div class="upload-spinner"></div></div>
+                            <a href="${uploadEvent.target.result}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image" style="display:none;">
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>`;
-                } 
-                else { 
+                } else { 
                     cleanContentHTML = `
                         <div class="doc-message">
                             <i class="fa-solid fa-file-lines"></i>
-                            <div class="doc-details">
-                                <div class="doc-name">${pendingImageData.name}</div>
-                            </div>
-                            <a href="${pendingImageData.data}" download="${pendingImageData.name}" class="doc-download-btn" title="Download Document">
+                            <div class="doc-details"><div class="doc-name">${file.name}</div></div>
+                            <a href="${uploadEvent.target.result}" download="${file.name}" class="doc-download-btn" title="Download Document">
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>`; 
                     localContentHTML = cleanContentHTML;
                 }
                 
-                // 1. SHOW INSTANTLY ON SCREEN WITH CLOCK ICON (Local Preview)
                 appendMessageUI(imgMsgId, senderName, replyBlockHTML + localContentHTML, timeStr, 'sent', true);
                 scrollToBottom();
                 
-                // Temporarily store emit data
-                const emitData = { id: imgMsgId, sender: senderName, text: replyBlockHTML + cleanContentHTML, time: timeStr };
+                setTimeout(() => {
+                    socket.emit('send_message', { id: imgMsgId, sender: senderName, text: replyBlockHTML + cleanContentHTML, time: timeStr });
+                }, 50);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function sendMessage() {
+            const senderName = document.getElementById('activeSenderName').value.trim() || "User";
+            const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            let replyBlockHTML = getReplyBlockHTML();
+
+            // --- MULTIPLE IMAGE / FILE UPLOAD LOGIC ---
+            if (pendingFilesArray.length > 0 && !editingMessageId) {
+                // Loop through all selected files and send them one by one
+                pendingFilesArray.forEach(file => {
+                    processAndSendFile(file, senderName, timeStr, replyBlockHTML);
+                });
                 
-                pendingImageData = null; imagePreviewBar.style.display = 'none'; fileInput.value = '';
+                pendingFilesArray = []; 
+                imagePreviewBar.style.display = 'none'; 
+                galleryInput.value = ''; docInput.value = ''; cameraInput.value = '';
                 
                 if(document.getElementById('messageInput').value.trim() === '') {
                     document.getElementById('mic-btn').style.display = 'flex';
                     document.getElementById('sendBtn').style.display = 'none';
                 }
                 clearReplyState();
-                
-                // 2. SEND TO SERVER (Delayed slightly so UI doesn't freeze before showing the image)
-                setTimeout(() => {
-                    socket.emit('send_message', emitData);
-                }, 50);
-                
-                return; // Exit here because image is sent
+                return; 
             }
 
-            // --- TEXT MESSAGE LOGIC WITH INSTANT PREVIEW ---
+            // --- TEXT MESSAGE LOGIC ---
             const text = messageInput.value.trim();
             if (text !== '') {
                 if (editingMessageId) {
@@ -933,11 +1040,9 @@
                 } else {
                     const textMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
                     
-                    // 1. INSTANT LOCAL PREVIEW for TEXT
                     appendMessageUI(textMsgId, senderName, replyBlockHTML + text, timeStr, 'sent', true);
                     scrollToBottom();
                     
-                    // 2. EMIT TO SERVER
                     setTimeout(() => {
                         socket.emit('send_message', { id: textMsgId, sender: senderName, text: replyBlockHTML + text, time: timeStr });
                     }, 50);
@@ -945,7 +1050,7 @@
                 
                 messageInput.value = ''; messageInput.style.height = '44px'; 
                 document.getElementById('mic-btn').style.display = 'flex'; document.getElementById('sendBtn').style.display = 'none';
-                socket.emit('stop_typing'); // Stop typing when sent
+                socket.emit('stop_typing'); 
                 clearReplyState();
             }
             messageInput.focus();
@@ -1094,7 +1199,6 @@
                 const timeEl = el.querySelector('.time');
                 const msgTime = timeEl ? timeEl.innerText : "Just now";
                 
-                // Show blue ticks in info if read
                 const hasBlueTick = el.querySelector('.tick-blue') !== null;
                 const infoReadTime = hasBlueTick ? msgTime : "--";
                 
@@ -1275,49 +1379,40 @@
             if (e.target === clearConfirmOverlay) clearConfirmOverlay.style.display = 'none';
         });
 
-        // --- UPDATED UI FUNCTION WITH OVERLAY REMOVAL LOGIC ---
         function appendMessageUI(id, sender, text, time, status = 'sent', isLocalPrepend = false) {
             let msgDiv = document.getElementById(id);
             const currentTypingName = document.getElementById('activeSenderName').value.trim();
             const isMe = (sender.toLowerCase() === currentTypingName.toLowerCase());
 
-            // 1. Agar Message pehle se screen par hai (yani instant preview lag chuka tha)
             if (msgDiv) {
-                // Loading overlay hatao (Spinner gaayab)
                 const overlay = msgDiv.querySelector('.upload-overlay');
                 if(overlay) overlay.remove();
 
-                // Photo ki opacity normal karo
                 const img = msgDiv.querySelector('img');
                 if(img) img.style.opacity = '1';
 
-                // Download button show karo ab kyunki upload complete ho gaya hai
                 const dlBtn = msgDiv.querySelector('.download-img-btn');
                 if(dlBtn) dlBtn.style.display = 'flex';
 
-                // Clock hatakar Ticks lagao
                 let ticksHTML = '';
                 if (isMe) {
                     let tickClass = (status === 'read') ? 'tick-blue' : 'tick-grey';
                     ticksHTML = `<span class="msg-ticks"><i class="fa-solid fa-check-double ${tickClass}"></i></span>`;
                 }
 
-                // Ticks update
                 const footer = msgDiv.querySelector('.msg-footer');
                 if (footer) {
                     footer.innerHTML = `<span class="time">${time}</span>${ticksHTML}`;
                 }
-                return; // Naya div add mat karo
+                return; 
             }
 
-            // 2. Agar Naya Message Hai
             msgDiv = document.createElement('div');
             if (id) msgDiv.id = id;
             msgDiv.classList.add('message', isMe ? 'sent' : 'received');
             
             let ticksHTML = '';
             if (isMe) {
-                // Agar upload ho raha hai toh ghadi (clock) dikhao
                 if (isLocalPrepend) {
                     ticksHTML = `<span class="msg-ticks"><i class="fa-regular fa-clock loading-clock"></i></span>`;
                 } else {
