@@ -102,12 +102,14 @@
         .user-info h4 { font-size: 15px; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-info span { font-size: 11px; color: #e9edef; display: block; transition: color 0.2s; }
         
-        /* Styles for Typing and Ticks */
+        /* Styles for Typing, Ticks and Recording */
         .typing-text { color: #25d366 !important; font-style: italic; font-weight: 500; font-size: 12px !important; }
         .msg-ticks { margin-left: 5px; display: inline-block; vertical-align: middle; font-size: 11px; }
         .tick-grey { color: #8696a0; }
         .tick-blue { color: #53bdeb; }
         .loading-clock { color: #8696a0; font-size: 11.5px; margin-left: 2px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        #recording-dot { animation: blink 1s infinite; }
 
         /* --- WHATSAPP SELECTION HEADER & EMOJI UI --- */
         #selection-header {
@@ -215,7 +217,7 @@
         .reply-text { font-size: 13px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #cancel-reply-btn { color: #8696a0; cursor: pointer; padding: 5px; font-size: 16px; }
 
-        /* --- WHATSAPP STYLE ATTACHMENT MENU (NEW) --- */
+        /* --- WHATSAPP STYLE ATTACHMENT MENU --- */
         .attachment-menu {
             display: none; position: absolute; bottom: 65px; left: 10px; right: 10px;
             background: #ffffff; border-radius: 16px; padding: 20px;
@@ -244,6 +246,7 @@
         .sender-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .sender-left label { font-size: 12px; color: #667781; white-space: nowrap; }
         .sender-left input { background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 4px; color: #111b21; font-size: 12px; width: 90px; outline: none; }
+        
         .chat-input-area { padding: 0 8px; display: flex; align-items: flex-end; width: 100%; background: transparent; box-sizing: border-box; gap: 8px; }
         .wa-input-wrapper {
             display: flex; align-items: flex-end; background-color: #ffffff; border-radius: 24px; padding: 4px 5px; flex: 1 1 auto; min-width: 0; box-shadow: 0 1px 1px rgba(0,0,0,0.1); min-height: 48px; box-sizing: border-box;
@@ -254,14 +257,28 @@
         }
         .chat-input-area textarea.msg-box::placeholder { color: #8696a0; font-size: 16px; }
         .action-buttons-wrapper { display: flex; flex-shrink: 0; align-items: flex-end; }
+        
+        /* Standard buttons */
         .action-buttons-wrapper button, #mic-btn {
             background: #00a884; border: none; color: white; width: 48px; height: 48px; min-width: 48px;
             border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 0; transition: transform 0.2s; flex-shrink: 0; 
         }
-        #mic-btn.recording { background: #ef4444; animation: pulse 1s infinite; }
         #sendBtn { display: none; } 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* --- NEW: AUDIO RECORDING UI ELEMENTS --- */
+        #recording-bar {
+            display: none; align-items: center; justify-content: space-between; background-color: #ffffff; 
+            border-radius: 24px; padding: 4px 15px; flex: 1 1 auto; box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
+            min-height: 48px; box-sizing: border-box; animation: slideInRight 0.2s ease-out;
+        }
+        @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        #send-record-btn {
+            display: none; background: #00a884; color: white; width: 48px; height: 48px; min-width: 48px; 
+            border-radius: 50%; cursor: pointer; justify-content: center; align-items: center; font-size: 20px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.2s; flex-shrink: 0; animation: popIn 0.2s ease-out;
+        }
 
         /* --- MESSAGE INFO MODAL --- */
         #info-modal {
@@ -402,7 +419,7 @@
             </div>
 
             <div class="chat-input-container">
-                <!-- NEW: WhatsApp Style Attachment Menu -->
+                <!-- WhatsApp Style Attachment Menu -->
                 <div id="attachment-menu" class="attachment-menu">
                     <div class="attach-item" id="attach-doc">
                         <div class="icon-circle" style="background: #7f66ff;"><i class="fa-solid fa-file-lines"></i></div>
@@ -446,17 +463,26 @@
                 </div>
 
                 <div class="chat-input-area">
-                    <div class="wa-input-wrapper">
+                    <div class="wa-input-wrapper" id="normal-input-wrapper">
                         <i class="fa-solid fa-face-smile" id="toggle-sender-btn" title="Change Name"></i>
                         <textarea class="msg-box" id="messageInput" placeholder="Message" rows="1" spellcheck="false" autocomplete="nope" autocorrect="off"></textarea>
                         
                         <i class="fa-solid fa-paperclip" title="Attach" id="attach-btn"></i>
                         <i class="fa-solid fa-camera" title="Camera" id="chat-camera-btn"></i>
                         
-                        <!-- NEW: Separate inputs for multiple files and direct camera -->
                         <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display: none;">
                         <input type="file" id="docInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx" multiple style="display: none;">
                         <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" style="display: none;">
+                    </div>
+                    
+                    <!-- NEW: WhatsApp Style Recording UI Bar -->
+                    <div id="recording-bar">
+                        <i class="fa-solid fa-trash-can" id="cancel-record-btn" style="color: #ef4444; font-size: 20px; cursor: pointer; padding: 5px;" title="Cancel Recording"></i>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div id="recording-dot"></div>
+                            <span id="recording-time" style="font-size: 16px; color: #111b21; font-weight: 500;">0:00</span>
+                        </div>
+                        <div style="width: 20px;"></div>
                     </div>
                     
                     <div class="action-buttons-wrapper">
@@ -464,6 +490,11 @@
                             <i class="fa-solid fa-microphone"></i>
                         </div>
                         <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+                        
+                        <!-- NEW: Send button strictly for Audio -->
+                        <div id="send-record-btn" title="Send Voice Note">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -476,7 +507,6 @@
                 </div>
                 <div class="info-body">
                     <div class="info-preview-box" id="info-preview-container">
-                        <!-- Message will be cloned here -->
                     </div>
                     <div class="info-stats-card">
                         <div class="info-stat-row">
@@ -747,21 +777,71 @@
             });
         });
 
-        // REPLY & EDIT LOGIC STATE
-        let replyToData = null;
-        let editingMessageId = null; 
-        
-        let mediaRecorder; let audioChunks = []; const micBtn = document.getElementById('mic-btn');
+        // ==============================================================
+        // --- NEW UPDATED AUDIO RECORDING LOGIC ---
+        // ==============================================================
+        let mediaRecorder; 
+        let audioChunks = []; 
+        let isRecordingCancelled = false;
+        let recordingInterval;
+        let recordingSeconds = 0;
+
+        const micBtn = document.getElementById('mic-btn');
+        const sendRecordBtn = document.getElementById('send-record-btn');
+        const cancelRecordBtn = document.getElementById('cancel-record-btn');
+        const recordingBar = document.getElementById('recording-bar');
+        const normalInputWrapper = document.getElementById('normal-input-wrapper');
+        const recordingTime = document.getElementById('recording-time');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Resets the UI back to text input mode
+        function resetRecordingUI() {
+            clearInterval(recordingInterval);
+            recordingSeconds = 0;
+            recordingTime.innerText = "0:00";
+            recordingBar.style.display = 'none';
+            sendRecordBtn.style.display = 'none';
+            
+            normalInputWrapper.style.display = 'flex';
+            
+            // Check if we need to show mic or send text button
+            if(messageInput.value.trim() !== '' || pendingFilesArray.length > 0) {
+                micBtn.style.display = 'none';
+                sendBtn.style.display = 'flex';
+            } else {
+                micBtn.style.display = 'flex';
+                sendBtn.style.display = 'none';
+            }
+        }
+
         micBtn.addEventListener('click', async () => {
             const senderName = document.getElementById('activeSenderName').value.trim() || "User";
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+                    mediaRecorder = new MediaRecorder(stream); 
+                    audioChunks = [];
+                    isRecordingCancelled = false;
+
                     mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
                     mediaRecorder.onstop = () => {
+                        // Completely release microphone hardware
+                        stream.getTracks().forEach(track => track.stop()); 
+
+                        if (isRecordingCancelled) {
+                            return; // Do nothing if the user cancelled
+                        }
+
+                        // Send the audio if NOT cancelled
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader(); reader.readAsDataURL(audioBlob);
+                        const reader = new FileReader(); 
+                        reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
                             const base64Audio = reader.result;
                             const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -780,16 +860,50 @@
                             clearReplyState();
                         };
                     };
-                    mediaRecorder.start(); micBtn.classList.add('recording'); micBtn.title = "Recording... Click to Stop";
+
+                    mediaRecorder.start(); 
+                    
+                    // --- Switch UI to Recording Mode ---
+                    normalInputWrapper.style.display = 'none';
+                    micBtn.style.display = 'none';
+                    sendBtn.style.display = 'none'; 
+                    recordingBar.style.display = 'flex';
+                    sendRecordBtn.style.display = 'flex';
+                    
+                    // --- Start Timer ---
+                    recordingSeconds = 0;
+                    recordingTime.innerText = "0:00";
+                    recordingInterval = setInterval(() => {
+                        recordingSeconds++;
+                        recordingTime.innerText = formatTime(recordingSeconds);
+                    }, 1000);
+
                 } catch (err) { alert("Microphone permission denied or not available!"); }
-            } else if (mediaRecorder.state === "recording") {
-                mediaRecorder.stop(); micBtn.classList.remove('recording'); micBtn.title = "Click to Record Voice Note";
             }
         });
 
+        // Cancel (Trash) Button Logic
+        cancelRecordBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                isRecordingCancelled = true;
+                mediaRecorder.stop(); 
+            }
+            resetRecordingUI();
+        });
+
+        // Send Recording Logic
+        sendRecordBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                isRecordingCancelled = false;
+                mediaRecorder.stop(); 
+            }
+            resetRecordingUI();
+        });
+
+
         // --- NEW ATTACHMENT & MULTIPLE FILE LOGIC ---
         let isSelectingFile = false; 
-        let pendingFilesArray = []; // Array to hold multiple files
+        let pendingFilesArray = []; 
 
         const attachBtn = document.getElementById('attach-btn');
         const attachmentMenu = document.getElementById('attachment-menu');
@@ -804,42 +918,32 @@
         const previewFileName = document.getElementById('previewFileName');
         const cancelImgBtn = document.getElementById('cancel-img-btn');
 
-        // Toggle attachment menu
         attachBtn.addEventListener('click', (e) => { 
             e.stopPropagation();
             attachmentMenu.style.display = attachmentMenu.style.display === 'grid' ? 'none' : 'grid'; 
         });
 
-        // Direct camera button (outside menu)
         chatCameraBtn.addEventListener('click', () => { 
             isSelectingFile = true; 
             cameraInput.click(); 
         });
 
-        // Menu items
         document.getElementById('attach-gallery').addEventListener('click', () => {
-            isSelectingFile = true;
-            galleryInput.click();
-            attachmentMenu.style.display = 'none';
+            isSelectingFile = true; galleryInput.click(); attachmentMenu.style.display = 'none';
         });
         document.getElementById('attach-doc').addEventListener('click', () => {
-            isSelectingFile = true;
-            docInput.click();
-            attachmentMenu.style.display = 'none';
+            isSelectingFile = true; docInput.click(); attachmentMenu.style.display = 'none';
         });
         document.getElementById('attach-camera').addEventListener('click', () => {
-            isSelectingFile = true;
-            cameraInput.click();
-            attachmentMenu.style.display = 'none';
+            isSelectingFile = true; cameraInput.click(); attachmentMenu.style.display = 'none';
         });
 
-        // Unified function to handle file selection (Single or Multiple)
         function handleFileSelection(event) {
             isSelectingFile = false; 
             const files = event.target.files;
             
             if (files && files.length > 0) {
-                pendingFilesArray = Array.from(files); // Store all selected files in array
+                pendingFilesArray = Array.from(files); 
                 const firstFile = pendingFilesArray[0];
                 
                 const reader = new FileReader();
@@ -851,7 +955,6 @@
                         previewImg.style.display = 'none'; 
                     }
                     
-                    // Show how many files are selected
                     if(pendingFilesArray.length > 1) {
                         previewFileName.innerText = pendingFilesArray.length + " files selected";
                     } else {
@@ -885,7 +988,6 @@
             if (isSelectingFile) { setTimeout(() => { isSelectingFile = false; }, 500); }
         });
 
-        const sendBtn = document.getElementById('sendBtn');
         const messageBox = document.getElementById('messageBox');
 
         socket.on('load_history', (history) => {
@@ -948,7 +1050,6 @@
             document.getElementById('reply-preview-bar').style.display = 'none';
         }
 
-        // Helper function to process and send a single file
         function processAndSendFile(file, senderName, timeStr, replyBlockHTML) {
             const reader = new FileReader();
             reader.onload = function(uploadEvent) {
@@ -1000,9 +1101,7 @@
             const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             let replyBlockHTML = getReplyBlockHTML();
 
-            // --- MULTIPLE IMAGE / FILE UPLOAD LOGIC ---
             if (pendingFilesArray.length > 0 && !editingMessageId) {
-                // Loop through all selected files and send them one by one
                 pendingFilesArray.forEach(file => {
                     processAndSendFile(file, senderName, timeStr, replyBlockHTML);
                 });
@@ -1019,7 +1118,6 @@
                 return; 
             }
 
-            // --- TEXT MESSAGE LOGIC ---
             const text = messageInput.value.trim();
             if (text !== '') {
                 if (editingMessageId) {
