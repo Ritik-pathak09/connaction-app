@@ -558,6 +558,10 @@
         const dateOptions = { month: 'long', day: 'numeric', year: 'numeric' };
         const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
         
+        // --- ADDED GLOBAL VARIABLES FIX FOR SEND BUTTON BUG ---
+        let replyToData = null;
+        let editingMessageId = null;
+        
         // --- NEW SMART NOTEBOOK LOGIC ---
         const notesInput = document.getElementById('notesInput');
         const noteTitleInput = document.getElementById('noteTitleInput');
