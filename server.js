@@ -57,7 +57,8 @@ setInterval(async () => {
 io.on('connection', async (socket) => {
     try {
         // Database se purani chat load karke naye user ko bhejo
-        const chatHistory = await Message.find().sort({ timestamp: 1 });
+        // FIX APPLIED HERE: Added .allowDiskUse(true) to prevent memory crash limit
+        const chatHistory = await Message.find().sort({ timestamp: 1 }).allowDiskUse(true);
         socket.emit('load_history', chatHistory);
     } catch (err) {
         console.error('Error loading history:', err);
