@@ -586,6 +586,13 @@
     </div>
 
     <script>
+        // ========================================================
+        // 🔴 CLOUDINARY API KEYS (DO NOT CHANGE) 🔴
+        // ========================================================
+        const CLOUD_NAME = "rg60kag7";
+        const UPLOAD_PRESET = "tncdsogf";
+        // ========================================================
+
         const dateOptions = { month: 'long', day: 'numeric', year: 'numeric' };
         const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
         
@@ -961,26 +968,49 @@
 
                         const audioType = audioChunks[0].type || 'audio/webm';
                         const audioBlob = new Blob(audioChunks, { type: audioType });
-                        const reader = new FileReader(); 
-                        reader.readAsDataURL(audioBlob);
-                        reader.onloadend = () => {
-                            const base64Audio = reader.result;
-                            const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                            const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
-                            
-                            let replyBlockHTML = getReplyBlockHTML();
-                            const audioHTML = replyBlockHTML + `<audio controls src="${base64Audio}"></audio>`;
-                            
-                            appendMessageUI(msgId, senderName, audioHTML, timeStr, 'sent', true);
-                            scrollToBottom();
-                            
-                            setTimeout(() => {
+                        
+                        const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                        const msgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
+                        let replyBlockHTML = getReplyBlockHTML();
+
+                        // Cloudinary Fake Upload UI
+                        const localContentHTML = `<div class="doc-message"><i class="fa-solid fa-microphone-lines" style="color:#8696a0;"></i><div class="doc-details"><div class="doc-name">Sending Voice Note...</div></div></div>`;
+                        appendMessageUI(msgId, senderName, replyBlockHTML + localContentHTML, timeStr, 'sent', true);
+                        scrollToBottom();
+
+                        // Cloudinary Fetch Setup
+                        const formData = new FormData();
+                        formData.append('file', audioBlob, 'voicenote.webm');
+                        formData.append('upload_preset', UPLOAD_PRESET);
+
+                        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.secure_url) {
+                                const audioHTML = replyBlockHTML + `<audio controls src="${data.secure_url}"></audio>`;
+                                const msgDiv = document.getElementById(msgId);
+                                if (msgDiv) {
+                                    const contentDiv = msgDiv.querySelector('.msg-text-content');
+                                    if (contentDiv) contentDiv.innerHTML = audioHTML;
+                                    const footer = msgDiv.querySelector('.msg-footer');
+                                    if (footer) footer.innerHTML = `<span class="time">${timeStr}</span><span class="msg-ticks"><i class="fa-solid fa-check-double tick-grey"></i></span>`;
+                                }
                                 socket.emit('send_message', { id: msgId, sender: senderName, text: audioHTML, time: timeStr });
-                            }, 50);
-                            
-                            clearReplyState();
-                            audioChunks = [];
-                        };
+                            } else {
+                                alert("Voice note upload failed: Check Cloudinary settings.");
+                                document.getElementById(msgId)?.remove();
+                            }
+                        })
+                        .catch(err => {
+                            alert("Network error. Voice note failed.");
+                            document.getElementById(msgId)?.remove();
+                        });
+
+                        clearReplyState();
+                        audioChunks = [];
                     };
 
                     mediaRecorder.start(); 
@@ -1067,27 +1097,24 @@
             if (files && files.length > 0) {
                 pendingFilesArray = Array.from(files); 
                 const firstFile = pendingFilesArray[0];
+                const tempUrl = URL.createObjectURL(firstFile);
+
+                if (firstFile.type.startsWith('image/')) { 
+                    previewImg.src = tempUrl; 
+                    previewImg.style.display = 'block'; 
+                } else { 
+                    previewImg.style.display = 'none'; 
+                }
                 
-                const reader = new FileReader();
-                reader.onload = function(uploadEvent) {
-                    if (firstFile.type.startsWith('image/')) { 
-                        previewImg.src = uploadEvent.target.result; 
-                        previewImg.style.display = 'block'; 
-                    } else { 
-                        previewImg.style.display = 'none'; 
-                    }
-                    
-                    if(pendingFilesArray.length > 1) {
-                        previewFileName.innerText = pendingFilesArray.length + " files selected";
-                    } else {
-                        previewFileName.innerText = firstFile.name; 
-                    }
-                    
-                    imagePreviewBar.style.display = 'flex';
-                    document.getElementById('mic-btn').style.display = 'none';
-                    document.getElementById('sendBtn').style.display = 'flex';
-                };
-                reader.readAsDataURL(firstFile);
+                if(pendingFilesArray.length > 1) {
+                    previewFileName.innerText = pendingFilesArray.length + " files selected";
+                } else {
+                    previewFileName.innerText = firstFile.name; 
+                }
+                
+                imagePreviewBar.style.display = 'flex';
+                document.getElementById('mic-btn').style.display = 'none';
+                document.getElementById('sendBtn').style.display = 'flex';
             }
         }
 
@@ -1173,71 +1200,95 @@
         }
 
         function processAndSendFile(file, senderName, timeStr, replyBlockHTML) {
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                let cleanContentHTML = "";
-                let localContentHTML = "";
-                const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
+            let cleanContentHTML = "";
+            let localContentHTML = "";
+            const imgMsgId = 'msg_' + Date.now() + Math.random().toString(36).substring(2, 7);
 
-                if (file.type.startsWith('image/')) { 
-                    cleanContentHTML = `
-                        <div class="image-message-container">
-                            <img src="${uploadEvent.target.result}" alt="Attachment">
-                            <a href="${uploadEvent.target.result}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image">
-                                <i class="fa-solid fa-download"></i>
-                            </a>
-                        </div>`; 
-                        
-                    localContentHTML = `
-                        <div class="image-message-container">
-                            <img src="${uploadEvent.target.result}" alt="Attachment" style="opacity: 0.7;">
-                            <div class="upload-overlay"><div class="upload-spinner"></div></div>
-                            <a href="${uploadEvent.target.result}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image" style="display:none;">
-                                <i class="fa-solid fa-download"></i>
-                            </a>
-                        </div>`;
-                } 
-                // --- NEW FIX: Video File Format Support for Chat Playback ---
-                else if (file.type.startsWith('video/')) {
-                    cleanContentHTML = `
-                        <div class="image-message-container">
-                            <video src="${uploadEvent.target.result}#t=0.1" style="max-width: 100%; border-radius: 6px; margin-top: 5px;"></video>
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 40px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fa-solid fa-circle-play"></i></div>
-                            <a href="${uploadEvent.target.result}" download="Sync_Video_${Date.now()}.mp4" class="download-img-btn" title="Download Video">
-                                <i class="fa-solid fa-download"></i>
-                            </a>
-                        </div>`;
-                    
-                    localContentHTML = `
-                        <div class="image-message-container">
-                            <video src="${uploadEvent.target.result}#t=0.1" style="opacity: 0.7; max-width: 100%; border-radius: 6px; margin-top: 5px;"></video>
-                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 40px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fa-solid fa-circle-play"></i></div>
-                            <div class="upload-overlay"><div class="upload-spinner"></div></div>
-                            <a href="${uploadEvent.target.result}" download="Sync_Video_${Date.now()}.mp4" class="download-img-btn" title="Download Video" style="display:none;">
-                                <i class="fa-solid fa-download"></i>
-                            </a>
-                        </div>`;
-                } 
-                else { 
-                    cleanContentHTML = `
-                        <div class="doc-message">
-                            <i class="fa-solid fa-file-lines"></i>
-                            <div class="doc-details"><div class="doc-name">${file.name}</div></div>
-                            <a href="${uploadEvent.target.result}" download="${file.name}" class="doc-download-btn" title="Download Document">
-                                <i class="fa-solid fa-download"></i>
-                            </a>
-                        </div>`; 
-                    localContentHTML = cleanContentHTML;
-                }
-                
-                appendMessageUI(imgMsgId, senderName, replyBlockHTML + localContentHTML, timeStr, 'sent', true);
-                scrollToBottom();
-                
-                setTimeout(() => {
+            const tempLocalUrl = URL.createObjectURL(file);
+
+            if (file.type.startsWith('image/')) {
+                localContentHTML = `
+                    <div class="image-message-container">
+                        <img src="${tempLocalUrl}" alt="Attachment" style="opacity: 0.5;">
+                        <div class="upload-overlay"><div class="upload-spinner"></div></div>
+                    </div>`;
+            } else if (file.type.startsWith('video/')) {
+                localContentHTML = `
+                    <div class="image-message-container">
+                        <video src="${tempLocalUrl}#t=0.1" style="opacity: 0.5; max-width: 100%; border-radius: 6px; margin-top: 5px;"></video>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 40px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fa-solid fa-circle-play"></i></div>
+                        <div class="upload-overlay"><div class="upload-spinner"></div></div>
+                    </div>`;
+            } else {
+                localContentHTML = `
+                    <div class="doc-message">
+                        <i class="fa-solid fa-file-arrow-up" style="color: #8696a0;"></i>
+                        <div class="doc-details"><div class="doc-name">Uploading: ${file.name}</div></div>
+                    </div>`;
+            }
+
+            appendMessageUI(imgMsgId, senderName, replyBlockHTML + localContentHTML, timeStr, 'sent', true);
+            scrollToBottom();
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+
+            fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.secure_url) {
+                    const fileUrl = data.secure_url;
+
+                    if (file.type.startsWith('image/')) {
+                        cleanContentHTML = `
+                            <div class="image-message-container">
+                                <img src="${fileUrl}" alt="Attachment">
+                                <a href="${fileUrl}" download="Sync_Image_${Date.now()}.png" class="download-img-btn" title="Download Image" target="_blank">
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            </div>`;
+                    } else if (file.type.startsWith('video/')) {
+                        cleanContentHTML = `
+                            <div class="image-message-container">
+                                <video src="${fileUrl}#t=0.1" style="max-width: 100%; border-radius: 6px; margin-top: 5px;"></video>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 40px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fa-solid fa-circle-play"></i></div>
+                                <a href="${fileUrl}" download="Sync_Video_${Date.now()}.mp4" class="download-img-btn" title="Download Video" target="_blank">
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            </div>`;
+                    } else {
+                        cleanContentHTML = `
+                            <div class="doc-message">
+                                <i class="fa-solid fa-file-lines"></i>
+                                <div class="doc-details"><div class="doc-name">${file.name}</div></div>
+                                <a href="${fileUrl}" download="${file.name}" class="doc-download-btn" title="Download Document" target="_blank">
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            </div>`;
+                    }
+
+                    const msgDiv = document.getElementById(imgMsgId);
+                    if (msgDiv) {
+                        const contentDiv = msgDiv.querySelector('.msg-text-content');
+                        if (contentDiv) contentDiv.innerHTML = replyBlockHTML + cleanContentHTML;
+                        const footer = msgDiv.querySelector('.msg-footer');
+                        if (footer) footer.innerHTML = `<span class="time">${timeStr}</span><span class="msg-ticks"><i class="fa-solid fa-check-double tick-grey"></i></span>`;
+                    }
+
                     socket.emit('send_message', { id: imgMsgId, sender: senderName, text: replyBlockHTML + cleanContentHTML, time: timeStr });
-                }, 50);
-            };
-            reader.readAsDataURL(file);
+                } else {
+                    alert("Upload failed! Check Cloudinary settings.");
+                    document.getElementById(imgMsgId)?.remove();
+                }
+            })
+            .catch(err => {
+                alert("Upload failed due to network error.");
+                document.getElementById(imgMsgId)?.remove();
+            });
         }
 
         function sendMessage() {
