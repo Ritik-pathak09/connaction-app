@@ -171,10 +171,10 @@
         .msg-footer { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 2px; float: right; margin-left: 10px; }
         .message .time { font-size: 10px; color: #667781; white-space: nowrap; line-height: 1; }
         .message audio { width: 100%; max-width: 200px; height: 35px; margin-top: 5px; }
-        .message img { max-width: 100%; border-radius: 6px; margin-top: 5px; display: block; }
+        .message img, .message video { max-width: 100%; border-radius: 6px; margin-top: 5px; display: block; }
 
         /* --- DOWNLOAD & UPLOAD STYLES --- */
-        .image-message-container { position: relative; display: inline-block; max-width: 100%; }
+        .image-message-container { position: relative; display: inline-block; max-width: 100%; cursor: pointer; }
         .download-img-btn {
             position: absolute; bottom: 12px; right: 8px; background: rgba(0, 0, 0, 0.6); color: white;
             border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center;
@@ -303,6 +303,25 @@
         .info-stat-row:last-child { margin-bottom: 0; }
         .info-stat-label { font-size: 16px; color: #111b21; display: flex; align-items: center; gap: 12px; }
         .info-stat-time { font-size: 14px; color: #667781; }
+
+        /* --- MEDIA VIEWER MODAL (NEW) --- */
+        #media-viewer-modal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000000; z-index: 200; flex-direction: column;
+        }
+        .media-viewer-header {
+            background: rgba(0, 0, 0, 0.4); color: #fff; padding: 15px; height: 60px;
+            display: flex; align-items: center; gap: 15px; font-size: 19px; font-weight: 500;
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 201; box-sizing: border-box;
+        }
+        .media-viewer-header i { cursor: pointer; padding: 5px; }
+        .media-viewer-content {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            width: 100%; height: 100%; overflow: hidden; background: #000000;
+        }
+        .media-viewer-content img, .media-viewer-content video {
+            max-width: 100%; max-height: 100%; object-fit: contain; display: none;
+        }
 
         /* --- CLEAR CHAT CONFIRM MODAL --- */
         #clear-confirm-overlay {
@@ -525,6 +544,18 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Full Screen Media Viewer Modal (NEW) -->
+            <div id="media-viewer-modal">
+                <div class="media-viewer-header">
+                    <i class="fa-solid fa-arrow-left" id="close-media-viewer"></i>
+                    <span id="media-viewer-sender">Media</span>
+                </div>
+                <div class="media-viewer-content">
+                    <img id="viewer-img" src="" alt="Full Screen">
+                    <video id="viewer-video" controls playsinline></video>
+                </div>
+            </div>
             
         </div>
     </div>
@@ -673,7 +704,7 @@
         });
 
         document.addEventListener('touchmove', function(e) {
-            if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput') && !e.target.closest('.info-body') && !e.target.closest('#attachment-menu')) {
+            if (!e.target.closest('#messageBox') && !e.target.closest('.notes-body textarea') && !e.target.closest('#messageInput') && !e.target.closest('.info-body') && !e.target.closest('#attachment-menu') && !e.target.closest('#media-viewer-modal')) {
                 e.preventDefault();
             }
         }, { passive: false });
@@ -704,6 +735,8 @@
             document.querySelector('.sender-bar').style.display = 'none'; 
             document.getElementById('info-modal').style.display = 'none';
             document.getElementById('attachment-menu').style.display = 'none';
+            document.getElementById('media-viewer-modal').style.display = 'none';
+            document.getElementById('viewer-video').pause();
             cancelSelection();
         }
         document.getElementById('back-to-notes').addEventListener('click', () => { lockScreen(); if(history.state && history.state.chatOpen) history.back(); });
@@ -784,7 +817,69 @@
             }
         }
         
-        document.getElementById('messageBox').addEventListener('click', markAsRead);
+        // --- Click Logic Update (Included Full-Screen Viewer Support) ---
+        document.getElementById('messageBox').addEventListener('click', (e) => {
+            markAsRead();
+            
+            // Do not open full-screen if clicking download button
+            if (e.target.closest('.download-img-btn') || e.target.closest('.doc-download-btn')) return;
+
+            const imgTarget = e.target.closest('img');
+            const videoTarget = e.target.closest('video');
+            
+            if (imgTarget && imgTarget.closest('.image-message-container') && !selectedMessageId) {
+                e.stopPropagation();
+                const viewerModal = document.getElementById('media-viewer-modal');
+                const viewerImg = document.getElementById('viewer-img');
+                const viewerVideo = document.getElementById('viewer-video');
+                
+                let senderName = "Media";
+                const msgEl = imgTarget.closest('.message');
+                if (msgEl) {
+                    const nameEl = msgEl.querySelector('.msg-sender-name');
+                    if (nameEl) senderName = nameEl.innerText;
+                }
+                document.getElementById('media-viewer-sender').innerText = senderName;
+
+                viewerImg.src = imgTarget.src;
+                viewerImg.style.display = 'block';
+                viewerVideo.style.display = 'none';
+                viewerVideo.pause();
+                viewerModal.style.display = 'flex';
+            } 
+            else if (videoTarget && videoTarget.closest('.image-message-container') && !selectedMessageId) {
+                e.stopPropagation();
+                const viewerModal = document.getElementById('media-viewer-modal');
+                const viewerImg = document.getElementById('viewer-img');
+                const viewerVideo = document.getElementById('viewer-video');
+                
+                let senderName = "Media";
+                const msgEl = videoTarget.closest('.message');
+                if (msgEl) {
+                    const nameEl = msgEl.querySelector('.msg-sender-name');
+                    if (nameEl) senderName = nameEl.innerText;
+                }
+                document.getElementById('media-viewer-sender').innerText = senderName;
+
+                let vidSrc = videoTarget.src;
+                if(vidSrc.includes('#t=')) vidSrc = vidSrc.split('#t=')[0]; // Remove timestamp for full play
+                
+                viewerVideo.src = vidSrc;
+                viewerVideo.style.display = 'block';
+                viewerImg.style.display = 'none';
+                viewerModal.style.display = 'flex';
+                viewerVideo.play();
+            }
+        });
+        
+        document.getElementById('close-media-viewer').addEventListener('click', () => {
+            document.getElementById('media-viewer-modal').style.display = 'none';
+            document.getElementById('viewer-img').src = '';
+            const video = document.getElementById('viewer-video');
+            video.pause();
+            video.src = '';
+        });
+
         document.getElementById('messageBox').addEventListener('scroll', markAsRead);
         messageInput.addEventListener('focus', markAsRead);
         window.addEventListener('focus', markAsRead);
@@ -1101,7 +1196,29 @@
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>`;
-                } else { 
+                } 
+                // --- NEW FIX: Video File Format Support for Chat Playback ---
+                else if (file.type.startsWith('video/')) {
+                    cleanContentHTML = `
+                        <div class="image-message-container">
+                            <video src="${uploadEvent.target.result}#t=0.1" style="max-width: 100%; border-radius: 6px; margin-top: 5px;"></video>
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 40px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fa-solid fa-circle-play"></i></div>
+                            <a href="${uploadEvent.target.result}" download="Sync_Video_${Date.now()}.mp4" class="download-img-btn" title="Download Video">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        </div>`;
+                    
+                    localContentHTML = `
+                        <div class="image-message-container">
+                            <video src="${uploadEvent.target.result}#t=0.1" style="opacity: 0.7; max-width: 100%; border-radius: 6px; margin-top: 5px;"></video>
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.8); font-size: 40px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fa-solid fa-circle-play"></i></div>
+                            <div class="upload-overlay"><div class="upload-spinner"></div></div>
+                            <a href="${uploadEvent.target.result}" download="Sync_Video_${Date.now()}.mp4" class="download-img-btn" title="Download Video" style="display:none;">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        </div>`;
+                } 
+                else { 
                     cleanContentHTML = `
                         <div class="doc-message">
                             <i class="fa-solid fa-file-lines"></i>
@@ -1452,6 +1569,8 @@
             
             if(msgEl.querySelector('.doc-name')) {
                 msgText = '📄 ' + msgEl.querySelector('.doc-name').innerText;
+            } else if(msgEl.querySelector('video')) {
+                msgText = '🎥 Video';
             } else if(msgEl.querySelector('img')) {
                 msgText = '📷 Photo';
             } else if(msgEl.querySelector('audio')) {
